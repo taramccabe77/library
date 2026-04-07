@@ -10,27 +10,27 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --c-bg: #2c1e10;
-  --c-bg2: #3a2814;
-  --c-bg3: #47321a;
-  --c-bg4: #553d20;
-  --c-border: #5e4425;
-  --c-border2: #6e5230;
-  --c-text: #f2e8d8;
-  --c-text2: #c4a882;
-  --c-text3: #8a6e4e;
-  --c-gold: #d4a043;
-  --c-gold2: #e8bc6a;
+  --c-bg: #1a1614;
+  --c-bg2: #221d1a;
+  --c-bg3: #2c2520;
+  --c-bg4: #362d27;
+  --c-border: #40342d;
+  --c-border2: #4e3f37;
+  --c-text: #ede4d8;
+  --c-text2: #b8a494;
+  --c-text3: #7a6858;
+  --c-gold: #c8963a;
+  --c-gold2: #deb060;
   --c-red: #b84030;
   --c-book: #5a9fd4;
-  --c-book-bg: rgba(90,159,212,0.15);
+  --c-book-bg: rgba(90,159,212,0.13);
   --c-fic: #a882d8;
-  --c-fic-bg: rgba(168,130,216,0.15);
+  --c-fic-bg: rgba(168,130,216,0.13);
   --c-reading: #5abf85;
-  --c-reading-bg: rgba(90,191,133,0.15);
-  --c-want: #d4a043;
-  --c-want-bg: rgba(212,160,67,0.15);
-  --c-done-bg: rgba(255,255,255,0.07);
+  --c-reading-bg: rgba(90,191,133,0.13);
+  --c-want: #c8963a;
+  --c-want-bg: rgba(200,150,58,0.13);
+  --c-done-bg: rgba(255,255,255,0.06);
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Outfit', system-ui, sans-serif;
   --r: 10px;
@@ -61,7 +61,7 @@ body::before {
 
 /* ── HEADER ── */
 header {
-  background: rgba(38,24,10,0.95);
+  background: rgba(22,18,16,0.95);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--c-border);
   padding: 0 2rem;
@@ -607,6 +607,71 @@ main { padding: 2rem; overflow: hidden; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--c-border2); border-radius: 4px; }
 
+/* ── AO3 IMPORT ── */
+.ao3-import-wrap {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--c-bg3);
+  border: 1px dashed var(--c-border2);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+.ao3-import-wrap input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--c-border2);
+  border-radius: 7px;
+  background: var(--c-bg2);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--c-text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ao3-import-wrap input:focus { border-color: var(--c-fic); }
+.ao3-import-wrap input::placeholder { color: var(--c-text3); }
+.btn-ao3 {
+  padding: 7px 14px;
+  border-radius: 7px; border: none;
+  background: var(--c-fic-bg);
+  border: 1px solid rgba(168,130,216,0.35);
+  color: var(--c-fic);
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-ao3:hover { background: rgba(168,130,216,0.2); }
+.btn-ao3:disabled { opacity: 0.5; cursor: not-allowed; }
+.ao3-status {
+  font-size: 11px;
+  color: var(--c-text3);
+  min-height: 16px;
+  transition: color 0.2s;
+}
+.ao3-status.ok { color: var(--c-reading); }
+.ao3-status.err { color: var(--c-red); }
+
+/* ── AO3 METADATA TAGS on cards ── */
+.ao3-meta {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-top: 2px;
+}
+.ao3-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--sans);
+  background: var(--c-bg4);
+  color: var(--c-text2);
+  border: 1px solid var(--c-border2);
+  line-height: 1.6;
+}
+.ao3-tag.warning { background: rgba(184,64,48,0.12); color: #e07060; border-color: rgba(184,64,48,0.25); }
+.ao3-tag.category { background: var(--c-fic-bg); color: var(--c-fic); border-color: rgba(168,130,216,0.25); }
+.ao3-tag.rating { background: rgba(200,150,58,0.12); color: var(--c-gold2); border-color: rgba(200,150,58,0.25); }
+.ao3-tag.fandom { background: var(--c-book-bg); color: var(--c-book); border-color: rgba(90,159,212,0.25); }
+
 /* ── MOBILE ── */
 @media (max-width: 680px) {
   .layout { grid-template-columns: 1fr; }
@@ -739,6 +804,18 @@ main { padding: 2rem; overflow: hidden; }
         <button class="type-btn active-book" id="btn-book" onclick="setType('book')">⊞ Book</button>
         <button class="type-btn" id="btn-fic" onclick="setType('fic')">❧ Fanfiction</button>
       </div>
+
+      <!-- AO3 import (shown only for fanfic) -->
+      <div id="ao3-import-section" style="display:none">
+        <div class="ao3-import-wrap">
+          <input id="ao3-url-input" type="url" placeholder="Paste an AO3 work URL to auto-fill…" />
+          <button class="btn-ao3" id="btn-ao3-fetch" onclick="fetchAO3()">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 1v6M4 4l3-3 3 3"/><path d="M2 9v2a1 1 0 001 1h8a1 1 0 001-1V9"/></svg>
+            Import
+          </button>
+        </div>
+        <div class="ao3-status" id="ao3-status"></div>
+      </div>
       <div class="field">
         <label>Title *</label>
         <input id="f-title" type="text" placeholder="Enter title" />
@@ -863,9 +940,122 @@ function setType(t) {
   document.getElementById('fandom-label').textContent = t === 'fic' ? 'Fandom' : 'Genre';
   document.getElementById('length-label').textContent = t === 'fic' ? 'Word count' : 'Page count';
   document.getElementById('f-fandom').placeholder = t === 'fic' ? 'e.g. Harry Potter, MCU' : 'e.g. Fantasy, Sci-Fi';
+  document.getElementById('ao3-import-section').style.display = t === 'fic' ? 'flex' : 'none';
+  document.getElementById('ao3-import-section').style.flexDirection = 'column';
+  document.getElementById('ao3-import-section').style.gap = '4px';
 }
 
-// ── Star rating ──
+// ── AO3 Import ──
+let ao3Data = null; // stores parsed metadata for current modal session
+
+async function fetchAO3() {
+  const raw = document.getElementById('ao3-url-input').value.trim();
+  if (!raw) return;
+
+  // Normalise URL — strip chapter paths, keep work ID
+  const match = raw.match(/archiveofourown\.org\/works\/(\d+)/);
+  if (!match) {
+    setAO3Status('Not a valid AO3 work URL', 'err');
+    return;
+  }
+  const workId = match[1];
+  const workUrl = `https://archiveofourown.org/works/${workId}?view_adult=true`;
+
+  const btn = document.getElementById('btn-ao3-fetch');
+  btn.disabled = true;
+  setAO3Status('Fetching…', '');
+
+  try {
+    // Use a public CORS proxy
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(workUrl)}`;
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error('Network error');
+    const json = await res.json();
+    const html = json.contents;
+
+    // Parse with DOMParser
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Title
+    const titleEl = doc.querySelector('h2.title.heading');
+    const title = titleEl ? titleEl.textContent.trim() : '';
+
+    // Author
+    const authorEl = doc.querySelector('h3.byline.heading a');
+    const author = authorEl ? authorEl.textContent.trim() : '';
+
+    // Summary
+    const summaryEl = doc.querySelector('.summary.module blockquote');
+    const summary = summaryEl ? summaryEl.textContent.trim().slice(0, 300) : '';
+
+    // Fandoms
+    const fandoms = [...doc.querySelectorAll('.fandom.tags a.tag')].map(a => a.textContent.trim());
+
+    // Rating
+    const ratingEl = doc.querySelector('.rating.tags a.tag');
+    const ao3Rating = ratingEl ? ratingEl.textContent.trim() : '';
+
+    // Categories (M/M, F/F, Gen, etc.)
+    const categories = [...doc.querySelectorAll('.category.tags a.tag')].map(a => a.textContent.trim());
+
+    // Warnings
+    const warnings = [...doc.querySelectorAll('.warning.tags a.tag')]
+      .map(a => a.textContent.trim())
+      .filter(w => w !== 'No Archive Warnings Apply' && w !== 'Creator Chose Not To Use Archive Warnings' === false);
+
+    // Relationships
+    const relationships = [...doc.querySelectorAll('.relationship.tags a.tag')].map(a => a.textContent.trim());
+
+    // Characters
+    const characters = [...doc.querySelectorAll('.character.tags a.tag')].map(a => a.textContent.trim());
+
+    // Additional tags
+    const addlTags = [...doc.querySelectorAll('.freeform.tags a.tag')].map(a => a.textContent.trim());
+
+    // Word count
+    const wordCountEl = doc.querySelector('dd.words');
+    const wordCount = wordCountEl ? wordCountEl.textContent.trim().replace(/,/g, '') : '';
+
+    // Chapters
+    const chaptersEl = doc.querySelector('dd.chapters');
+    const chapters = chaptersEl ? chaptersEl.textContent.trim() : '';
+
+    if (!title) {
+      setAO3Status('Could not parse work — try opening the URL first to accept the adult content notice', 'err');
+      btn.disabled = false;
+      return;
+    }
+
+    // Store parsed data
+    ao3Data = { fandoms, ao3Rating, categories, warnings, relationships, characters, addlTags, chapters };
+
+    // Fill in the form
+    document.getElementById('f-title').value = title;
+    document.getElementById('f-author').value = author;
+    document.getElementById('f-fandom').value = fandoms.slice(0, 2).join(', ');
+    if (wordCount) document.getElementById('f-length').value = Number(wordCount).toLocaleString() + ' words';
+    if (!document.getElementById('f-url').value) document.getElementById('f-url').value = `https://archiveofourown.org/works/${workId}`;
+    if (summary && !document.getElementById('f-notes').value) document.getElementById('f-notes').value = summary;
+
+    const parts = [];
+    if (ao3Rating) parts.push(ao3Rating);
+    if (categories.length) parts.push(categories.join(', '));
+    if (chapters) parts.push(`${chapters} chapters`);
+    setAO3Status('Imported: ' + parts.filter(Boolean).join(' · '), 'ok');
+
+  } catch(err) {
+    setAO3Status('Import failed — CORS proxy may be down, try again', 'err');
+    console.error(err);
+  }
+  btn.disabled = false;
+}
+
+function setAO3Status(msg, cls) {
+  const el = document.getElementById('ao3-status');
+  el.textContent = msg;
+  el.className = 'ao3-status' + (cls ? ' ' + cls : '');
+}
 function setRating(n) {
   currentRating = currentRating === n ? 0 : n;
   const btns = document.querySelectorAll('#star-picker button');
@@ -877,9 +1067,12 @@ function openModal(id) {
   editingId = id || null;
   currentRating = 0;
   currentType = 'book';
+  ao3Data = null;
   setType('book');
   setRating(0);
   document.getElementById('modal-title').textContent = id ? 'Edit entry' : 'Add to shelf';
+  document.getElementById('ao3-url-input').value = '';
+  setAO3Status('', '');
   ['f-title','f-author','f-fandom','f-status','f-length','f-url','f-notes'].forEach(fid => {
     document.getElementById(fid).value = '';
   });
@@ -898,6 +1091,7 @@ function openModal(id) {
       currentRating = e.rating || 0;
       const btns = document.querySelectorAll('#star-picker button');
       btns.forEach((b, i) => b.classList.toggle('lit', i < currentRating));
+      if (e.ao3Data) ao3Data = e.ao3Data;
     }
   }
   document.getElementById('modal-backdrop').classList.add('open');
@@ -925,6 +1119,7 @@ async function saveEntry() {
     url: document.getElementById('f-url').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
     rating: currentRating || null,
+    ao3Data: ao3Data || null,
     date: editingId
       ? (entries.find(x => x.id === editingId) || {}).date || new Date().toISOString().slice(0,10)
       : new Date().toISOString().slice(0,10),
@@ -997,6 +1192,21 @@ function escHtml(s) {
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function ao3MetaHtml(d) {
+  if (!d) return '';
+  const tags = [];
+  if (d.ao3Rating) tags.push(`<span class="ao3-tag rating">${escHtml(d.ao3Rating)}</span>`);
+  (d.categories||[]).forEach(c => tags.push(`<span class="ao3-tag category">${escHtml(c)}</span>`));
+  (d.warnings||[]).filter(w => w && w !== 'No Archive Warnings Apply').forEach(w =>
+    tags.push(`<span class="ao3-tag warning">${escHtml(w)}</span>`)
+  );
+  (d.relationships||[]).slice(0,3).forEach(r => tags.push(`<span class="ao3-tag">${escHtml(r)}</span>`));
+  (d.characters||[]).slice(0,4).forEach(c => tags.push(`<span class="ao3-tag">${escHtml(c)}</span>`));
+  (d.addlTags||[]).slice(0,5).forEach(t => tags.push(`<span class="ao3-tag">${escHtml(t)}</span>`));
+  if (!tags.length) return '';
+  return `<div class="ao3-meta">${tags.join('')}</div>`;
+}
+
 // ── Render ──
 function render() {
   const q = document.getElementById('search').value.trim().toLowerCase();
@@ -1009,9 +1219,15 @@ function render() {
   });
 
   if (q) {
-    filtered = filtered.filter(e =>
-      [e.title, e.author, e.fandom, e.notes].some(f => (f||'').toLowerCase().includes(q))
-    );
+    filtered = filtered.filter(e => {
+      const ao3Fields = e.ao3Data
+        ? [...(e.ao3Data.relationships||[]), ...(e.ao3Data.characters||[]),
+           ...(e.ao3Data.addlTags||[]), ...(e.ao3Data.categories||[]),
+           ...(e.ao3Data.fandoms||[])].join(' ')
+        : '';
+      return [e.title, e.author, e.fandom, e.notes, ao3Fields]
+        .some(f => (f||'').toLowerCase().includes(q));
+    });
   }
 
   if (sort === 'newest') filtered.sort((a,b) => b.id - a.id);
@@ -1114,6 +1330,7 @@ function render() {
         ${statusTag(e.status)}
         ${e.rating ? starsHtml(e.rating) : ''}
       </div>
+      ${ao3MetaHtml(e.ao3Data)}
       ${e.notes ? `<div class="card-notes">${escHtml(e.notes)}</div>` : ''}
       <div class="card-meta">
         <span>${escHtml(e.length || '')} ${e.date ? `<span class="card-date">· ${fmtDate(e.date)}</span>` : ''}</span>
