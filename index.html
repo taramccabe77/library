@@ -129,7 +129,22 @@ header {
 }
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
 
-.btn-add {
+.btn-ao3-import {
+  background: transparent;
+  color: var(--c-fic);
+  border: 1px solid rgba(168,130,216,0.4);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-ao3-import:hover { background: var(--c-fic-bg); border-color: rgba(168,130,216,0.7); }
+.btn-ao3-import svg { width: 13px; height: 13px; }
+
   background: linear-gradient(135deg, var(--c-gold), var(--c-gold2));
   color: #1a1008;
   border: none;
@@ -714,6 +729,69 @@ main { padding: 2rem; overflow: hidden; }
   letter-spacing: 0.04em;
 }
 
+/* ── BOOKMARK IMPORT MODAL ── */
+.bm-import-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(8,6,4,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.bm-import-backdrop.open { opacity: 1; pointer-events: all; }
+.bm-import-modal {
+  background: var(--c-bg2);
+  border: 1px solid var(--c-border2);
+  border-radius: var(--r-lg);
+  width: 100%; max-width: 560px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  transform: translateY(24px) scale(0.97);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  overflow: hidden;
+}
+.bm-import-backdrop.open .bm-import-modal { transform: none; }
+.bm-import-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--c-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bm-import-header h2 {
+  font-family: var(--serif); font-size: 22px; font-weight: 400;
+}
+.bm-import-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 14px; }
+.bm-steps {
+  font-size: 12px; color: var(--c-text2); line-height: 1.8;
+  background: var(--c-bg3); border-radius: 8px; padding: 12px 14px;
+  border: 1px solid var(--c-border);
+}
+.bm-steps ol { padding-left: 1.2em; }
+.bm-steps code {
+  background: var(--c-bg4); padding: 1px 6px; border-radius: 4px;
+  font-family: monospace; font-size: 11px; color: var(--c-gold);
+}
+.bm-textarea {
+  width: 100%; height: 120px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border2);
+  border-radius: 8px;
+  background: var(--c-bg3);
+  font-family: monospace; font-size: 11px;
+  color: var(--c-text); resize: none; outline: none;
+  transition: border-color 0.15s;
+}
+.bm-textarea:focus { border-color: var(--c-fic); }
+.bm-textarea::placeholder { color: var(--c-text3); }
+.bm-status { font-size: 12px; min-height: 18px; transition: color 0.2s; color: var(--c-text3); }
+.bm-status.ok { color: var(--c-reading); }
+.bm-status.err { color: var(--c-red); }
+.bm-footer {
+  padding: 0 1.5rem 1.5rem;
+  display: flex; gap: 10px; justify-content: flex-end;
+  border-top: 1px solid var(--c-border); padding-top: 1rem; margin-top: 0.5rem;
+}
+
 /* ── MOBILE ── */
 @media (max-width: 680px) {
   .layout { grid-template-columns: 1fr; }
@@ -739,6 +817,10 @@ main { padding: 2rem; overflow: hidden; }
       <div class="sync-dot"></div>
       <span id="sync-text">Loading…</span>
     </div>
+    <button class="btn-ao3-import" onclick="openBmImport()" title="Import AO3 Bookmarks">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>
+      AO3 Bookmarks
+    </button>
     <button class="btn-add" onclick="openModal()">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
       Add entry
@@ -921,6 +1003,32 @@ main { padding: 2rem; overflow: hidden; }
       <path d="M8 36v4a2 2 0 002 2h28a2 2 0 002-2v-4"/>
     </svg>
     <div class="drop-overlay-text">Drop AO3 link to import</div>
+  </div>
+</div>
+
+<div class="bm-import-backdrop" id="bm-import-backdrop" onclick="closeBmImport(event)">
+  <div class="bm-import-modal">
+    <div class="bm-import-header">
+      <h2>Import AO3 Bookmarks</h2>
+      <button class="close-btn" onclick="document.getElementById('bm-import-backdrop').classList.remove('open')">×</button>
+    </div>
+    <div class="bm-import-body">
+      <div class="bm-steps">
+        <ol>
+          <li>Go to <code>archiveofourown.org/users/CressMira/bookmarks</code> while logged in</li>
+          <li>Open DevTools (<code>F12</code>) → Console tab</li>
+          <li>Paste the <code>ao3_bookmarks_scraper.js</code> script and press Enter</li>
+          <li>Wait for it to finish — it will copy JSON to your clipboard</li>
+          <li>Paste the JSON below and click Import</li>
+        </ol>
+      </div>
+      <textarea class="bm-textarea" id="bm-json-input" placeholder='Paste JSON here — should start with [{"workId":...'></textarea>
+      <div class="bm-status" id="bm-status"></div>
+    </div>
+    <div class="bm-footer">
+      <button class="btn-cancel" onclick="document.getElementById('bm-import-backdrop').classList.remove('open')">Cancel</button>
+      <button class="btn-save" onclick="importBookmarks()">Import</button>
+    </div>
   </div>
 </div>
 
@@ -1474,6 +1582,78 @@ function render() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ── AO3 Bookmark Import ──
+function openBmImport() {
+  document.getElementById('bm-import-backdrop').classList.add('open');
+  document.getElementById('bm-json-input').value = '';
+  document.getElementById('bm-status').textContent = '';
+  document.getElementById('bm-status').className = 'bm-status';
+}
+
+function closeBmImport(e) {
+  if (e.target === document.getElementById('bm-import-backdrop'))
+    document.getElementById('bm-import-backdrop').classList.remove('open');
+}
+
+async function importBookmarks() {
+  const raw = document.getElementById('bm-json-input').value.trim();
+  if (!raw) return;
+
+  let bookmarks;
+  try {
+    bookmarks = JSON.parse(raw);
+    if (!Array.isArray(bookmarks)) throw new Error('not an array');
+  } catch(e) {
+    document.getElementById('bm-status').textContent = 'Invalid JSON — make sure you pasted the full output from the scraper script';
+    document.getElementById('bm-status').className = 'bm-status err';
+    return;
+  }
+
+  document.getElementById('bm-status').textContent = `Processing ${bookmarks.length} bookmarks…`;
+  document.getElementById('bm-status').className = 'bm-status';
+
+  const existingTitles = new Set(entries.map(e => e.title.toLowerCase().trim()));
+  const toAdd = [];
+
+  for (const bm of bookmarks) {
+    if (!bm.title || existingTitles.has(bm.title.toLowerCase().trim())) continue;
+    const wordCount = bm.wordCount ? Number(bm.wordCount).toLocaleString() + ' words' : '';
+    toAdd.push({
+      id: Date.now() + Math.random(),
+      type: 'fic',
+      title: bm.title,
+      author: bm.author || '',
+      fandom: (bm.fandoms || []).slice(0, 2).join(', '),
+      status: 'want',
+      rating: null,
+      length: wordCount,
+      url: bm.url || '',
+      notes: bm.summary || '',
+      date: new Date().toISOString().slice(0, 10),
+      ao3Data: {
+        fandoms: bm.fandoms || [],
+        ao3Rating: bm.ao3Rating || '',
+        categories: bm.categories || [],
+        warnings: bm.warnings || [],
+        relationships: bm.relationships || [],
+        characters: bm.characters || [],
+        addlTags: bm.addlTags || [],
+        chapters: bm.chapters || '',
+      }
+    });
+    existingTitles.add(bm.title.toLowerCase().trim());
+  }
+
+  entries = [...entries, ...toAdd];
+  render();
+  await persistEntries();
+
+  const skipped = bookmarks.length - toAdd.length;
+  document.getElementById('bm-status').textContent =
+    `✓ Imported ${toAdd.length} bookmarks${skipped ? ` (${skipped} already in library)` : ''}`;
+  document.getElementById('bm-status').className = 'bm-status ok';
 }
 
 // ── Version name ──
