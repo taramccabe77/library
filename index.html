@@ -1049,7 +1049,11 @@ async function fetchAO3() {
       try {
         setAO3Status(`Fetching… (${i + 1}/${proxies.length})`, '');
         const result = await proxies[i](workUrl);
-        if (result && result.length > 500) { html = result; break; }
+        // Must be long enough AND contain AO3-specific content
+        if (result && result.length > 500 && result.includes('archiveofourown')) {
+          html = result;
+          break;
+        }
       } catch (e) {
         console.warn(`Proxy ${i + 1} failed:`, e.message);
       }
@@ -1098,7 +1102,7 @@ async function fetchAO3() {
         btn.disabled = false;
         return;
       }
-      // Title not found from proxy — fall through to Claude
+      console.warn('Proxy returned HTML but no title found, falling back to Claude');
     }
 
     // Proxies failed or returned no title — fall back to Claude API (uses credits)
