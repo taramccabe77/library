@@ -1477,30 +1477,7 @@ function render() {
 }
 
 // ── Version name ──
-const VERSION_NAMES = [
-  // Mythological
-  'Calliope','Orpheus','Scheherazade','Ariadne','Morpheus','Persephone',
-  'Hermes','Mnemosyne','Ptolemy','Thoth','Seshat','Odin',
-  // Famous librarians & scholars
-  'Hypatia','Dewey','Borges','Erasmus','Petrarch','Vespasiano',
-  'Cassiodorus','Zenodotus','Eratosthenes','Pliny','Maimonides',
-  // Literary characters
-  'Atticus','Gatsby','Holden','Hermione','Ishmael','Quixote',
-  'Matilda','Prospero','Portia','Dorothea','Raskolnikov','Pip',
-  'Aureliano','Humbert','Clarissa','Moriarty','Sancho',
-  // Authors
-  'Woolf','Borges','LeGuin','Calvino','Nabokov','Atwood',
-  'Baldwin','Achebe','Plath','Chekhov','Dickinson','Tolkien',
-  'Vonnegut','Camus','Mishima','Lessing','Pamuk','Bolano',
-  // Bookish words
-  'Folio','Vellum','Codex','Marginalia','Colophon','Incunabula',
-  'Palimpsest','Quire','Ligature','Errata','Addendum','Recto',
-];
-
-// Seed from date so it changes each day but stays stable within a session
-const seed = Math.floor(Date.now() / 86400000);
-const versionName = VERSION_NAMES[seed % VERSION_NAMES.length];
-document.getElementById('version-tag').textContent = versionName;
+document.getElementById('version-tag').textContent = 'Palimpsest';
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
