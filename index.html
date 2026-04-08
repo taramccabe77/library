@@ -93,11 +93,16 @@ header {
 }
 
 .version-tag {
-  font-size: 10px;
+  position: fixed;
+  bottom: 14px;
+  left: 16px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--c-text3);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   font-family: var(--sans);
+  z-index: 50;
+  pointer-events: none;
 }
 
 .header-right { display: flex; align-items: center; gap: 10px; }
@@ -730,7 +735,6 @@ main { padding: 2rem; overflow: hidden; }
     The <em>Library</em>
   </div>
   <div class="header-right">
-    <div class="version-tag" id="version-tag"></div>
     <div class="sync-indicator" id="sync-indicator">
       <div class="sync-dot"></div>
       <span id="sync-text">Loading…</span>
@@ -919,6 +923,8 @@ main { padding: 2rem; overflow: hidden; }
     <div class="drop-overlay-text">Drop AO3 link to import</div>
   </div>
 </div>
+
+<div class="version-tag" id="version-tag"></div>
 
 <script>
 // ── Storage helpers using window.storage (cross-device cloud) ──
