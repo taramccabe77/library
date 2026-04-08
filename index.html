@@ -92,6 +92,14 @@ header {
   color: var(--c-gold);
 }
 
+.version-tag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--c-text3);
+  letter-spacing: 0.06em;
+  font-family: var(--sans);
+}
+
 .header-right { display: flex; align-items: center; gap: 10px; }
 
 .sync-indicator {
@@ -722,6 +730,7 @@ main { padding: 2rem; overflow: hidden; }
     The <em>Library</em>
   </div>
   <div class="header-right">
+    <div class="version-tag" id="version-tag"></div>
     <div class="sync-indicator" id="sync-indicator">
       <div class="sync-dot"></div>
       <span id="sync-text">Loading…</span>
@@ -998,7 +1007,10 @@ async function fetchAO3() {
     return;
   }
   const workId = match[1];
-  const workUrl = `https://archiveofourown.org/works/${workId}?view_adult=true`;
+  // Fetch the base work URL — for adult works the warning page itself
+  // contains all the metadata (tags, rating, etc.) so we don't need to bypass it.
+  // We also try view_adult=true as a fallback in case the proxy forwards cookies.
+  const workUrl = `https://archiveofourown.org/works/${workId}`;
 
   const btn = document.getElementById('btn-ao3-fetch');
   btn.disabled = true;
@@ -1044,41 +1056,53 @@ async function fetchAO3() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
-    // Title
-    const titleEl = doc.querySelector('h2.title.heading');
-    const title = titleEl ? titleEl.textContent.trim() : '';
+    // Detect if we landed on the adult content warning page
+    // The warning page has a .adult-banner or a form with proceed button,
+    // but crucially it still contains the full work metadata in .work.meta
+    const isAdultPage = !!doc.querySelector('.adult-banner, #adult-banner, [data-proceed]')
+      || html.includes('This work could have adult content');
 
-    // Author
-    const authorEl = doc.querySelector('h3.byline.heading a');
+    // Title — on warning page it's in h2.title or the meta og:title
+    let title = '';
+    const titleEl = doc.querySelector('h2.title.heading');
+    if (titleEl) {
+      title = titleEl.textContent.trim();
+    } else {
+      const ogTitle = doc.querySelector('meta[property="og:title"]');
+      if (ogTitle) title = ogTitle.getAttribute('content').replace(/ - Archive of Our Own$/, '').trim();
+    }
+
+    // Author — on warning page it's still in h3.byline or byline links
+    const authorEl = doc.querySelector('h3.byline.heading a, .byline a');
     const author = authorEl ? authorEl.textContent.trim() : '';
 
     // Summary
-    const summaryEl = doc.querySelector('.summary.module blockquote');
+    const summaryEl = doc.querySelector('.summary.module blockquote, .summary blockquote');
     const summary = summaryEl ? summaryEl.textContent.trim().slice(0, 300) : '';
 
-    // Fandoms
-    const fandoms = [...doc.querySelectorAll('.fandom.tags a.tag')].map(a => a.textContent.trim());
+    // Fandoms — same selector works on both pages
+    const fandoms = [...doc.querySelectorAll('.fandom.tags a.tag, .fandoms a.tag')].map(a => a.textContent.trim());
 
     // Rating
-    const ratingEl = doc.querySelector('.rating.tags a.tag');
+    const ratingEl = doc.querySelector('.rating.tags a.tag, .rating a.tag, span.rating');
     const ao3Rating = ratingEl ? ratingEl.textContent.trim() : '';
 
     // Categories (M/M, F/F, Gen, etc.)
-    const categories = [...doc.querySelectorAll('.category.tags a.tag')].map(a => a.textContent.trim());
+    const categories = [...doc.querySelectorAll('.category.tags a.tag, .categories a.tag')].map(a => a.textContent.trim());
 
     // Warnings
-    const warnings = [...doc.querySelectorAll('.warning.tags a.tag')]
+    const warnings = [...doc.querySelectorAll('.warning.tags a.tag, .warnings a.tag')]
       .map(a => a.textContent.trim())
-      .filter(w => w !== 'No Archive Warnings Apply' && w !== 'Creator Chose Not To Use Archive Warnings' === false);
+      .filter(w => w !== 'No Archive Warnings Apply' && w !== 'Creator Chose Not To Use Archive Warnings');
 
     // Relationships
-    const relationships = [...doc.querySelectorAll('.relationship.tags a.tag')].map(a => a.textContent.trim());
+    const relationships = [...doc.querySelectorAll('.relationship.tags a.tag, .relationships a.tag')].map(a => a.textContent.trim());
 
     // Characters
-    const characters = [...doc.querySelectorAll('.character.tags a.tag')].map(a => a.textContent.trim());
+    const characters = [...doc.querySelectorAll('.character.tags a.tag, .characters a.tag')].map(a => a.textContent.trim());
 
     // Additional tags
-    const addlTags = [...doc.querySelectorAll('.freeform.tags a.tag')].map(a => a.textContent.trim());
+    const addlTags = [...doc.querySelectorAll('.freeform.tags a.tag, .freeforms a.tag')].map(a => a.textContent.trim());
 
     // Word count
     const wordCountEl = doc.querySelector('dd.words');
@@ -1089,7 +1113,12 @@ async function fetchAO3() {
     const chapters = chaptersEl ? chaptersEl.textContent.trim() : '';
 
     if (!title) {
-      setAO3Status('Could not parse work — try opening the URL first to accept the adult content notice', 'err');
+      // If we got the adult warning page but still no title, the proxy may have
+      // returned a login redirect. Give a clearer message.
+      const hint = isAdultPage
+        ? 'Got the adult warning page but could not read metadata — the proxy may require a login. Try again in a moment.'
+        : 'Could not parse work — try opening the AO3 link in your browser first, then retry.';
+      setAO3Status(hint, 'err');
       btn.disabled = false;
       return;
     }
@@ -1406,6 +1435,32 @@ function render() {
     </div>`;
   }).join('');
 }
+
+// ── Version name ──
+const VERSION_NAMES = [
+  // Mythological
+  'Calliope','Orpheus','Scheherazade','Ariadne','Morpheus','Persephone',
+  'Hermes','Mnemosyne','Ptolemy','Thoth','Seshat','Odin',
+  // Famous librarians & scholars
+  'Hypatia','Dewey','Borges','Erasmus','Petrarch','Vespasiano',
+  'Cassiodorus','Zenodotus','Eratosthenes','Pliny','Maimonides',
+  // Literary characters
+  'Atticus','Gatsby','Holden','Hermione','Ishmael','Quixote',
+  'Matilda','Prospero','Portia','Dorothea','Raskolnikov','Pip',
+  'Aureliano','Humbert','Clarissa','Moriarty','Sancho',
+  // Authors
+  'Woolf','Borges','LeGuin','Calvino','Nabokov','Atwood',
+  'Baldwin','Achebe','Plath','Chekhov','Dickinson','Tolkien',
+  'Vonnegut','Camus','Mishima','Lessing','Pamuk','Bolano',
+  // Bookish words
+  'Folio','Vellum','Codex','Marginalia','Colophon','Incunabula',
+  'Palimpsest','Quire','Ligature','Errata','Addendum','Recto',
+];
+
+// Seed from date so it changes each day but stays stable within a session
+const seed = Math.floor(Date.now() / 86400000);
+const versionName = VERSION_NAMES[seed % VERSION_NAMES.length];
+document.getElementById('version-tag').textContent = versionName;
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
