@@ -672,6 +672,35 @@ main { padding: 2rem; overflow: hidden; }
 .ao3-tag.rating { background: rgba(200,150,58,0.12); color: var(--c-gold2); border-color: rgba(200,150,58,0.25); }
 .ao3-tag.fandom { background: var(--c-book-bg); color: var(--c-book); border-color: rgba(90,159,212,0.25); }
 
+/* ── DROP OVERLAY ── */
+.drop-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(22,18,16,0.85);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.15s;
+}
+.drop-overlay.visible { opacity: 1; pointer-events: all; }
+.drop-overlay-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  border: 2px dashed var(--c-fic);
+  border-radius: 20px;
+  padding: 48px 64px;
+  color: var(--c-fic);
+  animation: dropPulse 1.5s ease-in-out infinite;
+}
+@keyframes dropPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(168,130,216,0.2); }
+  50%      { box-shadow: 0 0 0 16px rgba(168,130,216,0); }
+}
+.drop-overlay-text {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
 /* ── MOBILE ── */
 @media (max-width: 680px) {
   .layout { grid-template-columns: 1fr; }
@@ -871,6 +900,16 @@ main { padding: 2rem; overflow: hidden; }
 </div>
 
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon"></span><span id="toast-msg"></span></div>
+
+<div class="drop-overlay" id="drop-overlay">
+  <div class="drop-overlay-inner">
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+      <path d="M24 4v28M14 22l10 10 10-10"/>
+      <path d="M8 36v4a2 2 0 002 2h28a2 2 0 002-2v-4"/>
+    </svg>
+    <div class="drop-overlay-text">Drop AO3 link to import</div>
+  </div>
+</div>
 
 <script>
 // ── Storage helpers using window.storage (cross-device cloud) ──
@@ -1341,6 +1380,65 @@ function render() {
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Drag & Drop / Paste AO3 links ──
+function isAO3Url(str) {
+  return /archiveofourown\.org\/works\/\d+/.test(str);
+}
+
+async function handleAO3QuickImport(url) {
+  // If modal is already open and set to fic, just fill the URL field and fetch
+  const modalOpen = document.getElementById('modal-backdrop').classList.contains('open');
+  if (!modalOpen) {
+    openModal();
+    setType('fic');
+    // wait for modal animation
+    await new Promise(r => setTimeout(r, 180));
+  } else if (currentType !== 'fic') {
+    setType('fic');
+  }
+  document.getElementById('ao3-url-input').value = url;
+  await fetchAO3();
+}
+
+// Global paste (when not focused on an input)
+document.addEventListener('paste', async e => {
+  const active = document.activeElement;
+  const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
+  if (isInput) return; // let normal paste happen
+  const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+  if (isAO3Url(text)) {
+    e.preventDefault();
+    await handleAO3QuickImport(text);
+  }
+});
+
+// Drag over — show overlay
+document.addEventListener('dragover', e => {
+  const items = [...(e.dataTransfer.items || [])];
+  const hasText = items.some(i => i.kind === 'string');
+  if (hasText) {
+    e.preventDefault();
+    document.getElementById('drop-overlay').classList.add('visible');
+  }
+});
+
+document.addEventListener('dragleave', e => {
+  if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
+    document.getElementById('drop-overlay').classList.remove('visible');
+  }
+});
+
+document.addEventListener('drop', async e => {
+  e.preventDefault();
+  document.getElementById('drop-overlay').classList.remove('visible');
+  const text = e.dataTransfer.getData('text/plain').trim()
+    || e.dataTransfer.getData('text/uri-list').trim()
+    || e.dataTransfer.getData('text').trim();
+  if (isAO3Url(text)) {
+    await handleAO3QuickImport(text);
+  }
+});
 
 init();
 </script>
