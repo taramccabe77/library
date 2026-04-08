@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --c-bg: #1a1614;
+  --c-bg2: #221d1a;
+  --c-bg3: #2c2520;
+  --c-bg4: #362d27;
+  --c-border: #40342d;
+  --c-border2: #4e3f37;
+  --c-text: #ede4d8;
+  --c-text2: #b8a494;
+  --c-text3: #7a6858;
+  --c-gold: #c8963a;
+  --c-gold2: #deb060;
+  --c-red: #b84030;
+  --c-book: #5a9fd4;
+  --c-book-bg: rgba(90,159,212,0.13);
+  --c-fic: #a882d8;
+  --c-fic-bg: rgba(168,130,216,0.13);
+  --c-reading: #5abf85;
+  --c-reading-bg: rgba(90,191,133,0.13);
+  --c-want: #c8963a;
+  --c-want-bg: rgba(200,150,58,0.13);
+  --c-done-bg: rgba(255,255,255,0.06);
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Outfit', system-ui, sans-serif;
+  --r: 10px;
+  --r-lg: 16px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--c-bg);
+  color: var(--c-text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+/* ── HEADER ── */
+header {
+  background: rgba(22,18,16,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--c-border);
+  padding: 0 2rem;
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px;
+}
+
+.logo {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--c-text);
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-mark {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--c-gold), var(--c-gold2));
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-family: var(--serif); font-weight: 600;
+  color: #1a0e04; line-height: 1;
+  box-shadow: 0 4px 12px rgba(200,146,58,0.3);
+}
+.logo em {
+  font-style: italic;
+  color: var(--c-gold);
+}
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.sync-indicator {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px;
+  color: var(--c-text3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--c-bg3);
+  border: 1px solid var(--c-border);
+  transition: all 0.3s;
+}
+.sync-indicator.syncing { color: var(--c-gold); border-color: rgba(200,146,58,0.3); }
+.sync-indicator.saved { color: var(--c-reading); border-color: rgba(76,175,125,0.3); }
+.sync-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.sync-indicator.syncing .sync-dot {
+  animation: pulse 1s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+.btn-add {
+  background: linear-gradient(135deg, var(--c-gold), var(--c-gold2));
+  color: #1a1008;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 4px 16px rgba(200,146,58,0.25);
+}
+.btn-add:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,146,58,0.35); }
+.btn-add:active { transform: translateY(0); }
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 60px);
+}
+
+/* ── SIDEBAR ── */
+aside {
+  background: var(--c-bg2);
+  border-right: 1px solid var(--c-border);
+  padding: 1.5rem 1rem;
+  position: sticky; top: 60px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
+.sidebar-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--c-text3);
+  padding: 0 8px;
+  margin-bottom: 6px;
+  margin-top: 1.5rem;
+}
+.sidebar-label:first-child { margin-top: 0; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--c-text2);
+  transition: all 0.12s;
+  border: none; background: none; width: 100%; text-align: left;
+  font-family: var(--sans);
+}
+.nav-item:hover { background: var(--c-bg3); color: var(--c-text); }
+.nav-item.active { background: var(--c-bg4); color: var(--c-text); border: 1px solid var(--c-border2); }
+.nav-item .count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--c-text3);
+  font-weight: 500;
+  min-width: 18px;
+  text-align: right;
+}
+.nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.stats-box {
+  margin-top: 0.5rem;
+  background: var(--c-bg3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r);
+  padding: 12px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.stat-item { }
+.stat-num {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--c-gold);
+  line-height: 1;
+}
+.stat-lbl {
+  font-size: 10px;
+  color: var(--c-text3);
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+/* ── MAIN ── */
+main { padding: 2rem; overflow: hidden; }
+
+/* ── TOP BAR ── */
+.top-bar {
+  display: flex; gap: 12px; align-items: center;
+  margin-bottom: 1.5rem;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+}
+.search-wrap svg {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  width: 15px; height: 15px; color: var(--c-text3); pointer-events: none;
+}
+#search {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border: 1px solid var(--c-border2);
+  border-radius: 9px;
+  background: var(--c-bg2);
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--c-text);
+  transition: all 0.15s;
+  outline: none;
+}
+#search:focus { border-color: var(--c-gold); box-shadow: 0 0 0 3px rgba(200,146,58,0.1); }
+#search::placeholder { color: var(--c-text3); }
+
+.sort-wrap {
+  display: flex; align-items: center; gap: 8px;
+}
+.sort-label { font-size: 11px; color: var(--c-text3); white-space: nowrap; }
+.sort-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--c-border2);
+  background: var(--c-bg2);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--c-text2);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.sort-select:focus { border-color: var(--c-gold); }
+
+/* ── FILTER CHIPS ── */
+.filter-row {
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 1.5rem;
+}
+.result-count { font-size: 12px; color: var(--c-text3); margin-left: auto; }
+
+.chip {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--c-border2);
+  font-size: 11.5px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--c-text2);
+  transition: all 0.12s;
+  font-family: var(--sans);
+  font-weight: 400;
+}
+.chip:hover { border-color: var(--c-text3); color: var(--c-text); }
+.chip.active-all { background: var(--c-bg3); border-color: var(--c-border2); color: var(--c-text); }
+.chip.active-book { background: var(--c-book-bg); border-color: rgba(74,139,196,0.4); color: var(--c-book); }
+.chip.active-fic { background: var(--c-fic-bg); border-color: rgba(155,114,207,0.4); color: var(--c-fic); }
+.chip.active-reading { background: var(--c-reading-bg); border-color: rgba(76,175,125,0.4); color: var(--c-reading); }
+.chip.active-want { background: var(--c-want-bg); border-color: rgba(232,170,58,0.4); color: var(--c-want); }
+.chip.active-read { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: var(--c-text); }
+
+/* ── VIEW TOGGLE ── */
+.view-toggle {
+  display: flex; border: 1px solid var(--c-border2); border-radius: 8px; overflow: hidden;
+}
+.view-btn {
+  padding: 6px 10px; border: none; background: transparent;
+  color: var(--c-text3); cursor: pointer; transition: all 0.12s;
+}
+.view-btn.active { background: var(--c-bg3); color: var(--c-text); }
+.view-btn svg { width: 14px; height: 14px; display: block; }
+
+/* ── ENTRIES GRID ── */
+.entries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.entries-grid.list-view {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--c-bg2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp 0.22s ease both;
+}
+.card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, transparent 60%, rgba(255,255,255,0.015));
+  pointer-events: none;
+}
+.card:hover { border-color: var(--c-border2); box-shadow: 0 8px 32px rgba(0,0,0,0.3); transform: translateY(-2px); }
+.card[data-type="book"] { border-top: 2px solid rgba(74,139,196,0.35); }
+.card[data-type="fic"] { border-top: 2px solid rgba(155,114,207,0.35); }
+
+.list-view .card {
+  flex-direction: row; align-items: center;
+  padding: 14px 18px; gap: 14px;
+  transform: none !important;
+  border-top: none !important;
+  border-left: 3px solid transparent;
+}
+.list-view .card[data-type="book"] { border-left-color: rgba(74,139,196,0.4); }
+.list-view .card[data-type="fic"] { border-left-color: rgba(155,114,207,0.4); }
+.list-view .card-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.list-view .card-meta { border-top: none; padding-top: 0; margin-top: 0; }
+.list-view .card-notes { display: none; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.card-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--c-text);
+  line-height: 1.25;
+  flex: 1;
+}
+.card-title a {
+  color: inherit; text-decoration: none;
+  transition: color 0.12s;
+}
+.card-title a:hover { color: var(--c-gold); }
+
+.card-actions { display: flex; gap: 3px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.card:hover .card-actions { opacity: 1; }
+.icon-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px; border: none; background: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c-text3);
+  transition: all 0.12s;
+}
+.icon-btn:hover { background: var(--c-bg3); color: var(--c-text); }
+.icon-btn.del:hover { background: rgba(192,57,43,0.15); color: var(--c-red); }
+.icon-btn svg { width: 14px; height: 14px; }
+
+.card-sub {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.card-author { font-size: 12px; color: var(--c-text2); }
+.card-fandom {
+  font-size: 11px;
+  color: var(--c-text3);
+  font-style: italic;
+  font-family: var(--serif);
+}
+
+.card-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+.tag-book { background: var(--c-book-bg); color: var(--c-book); border-color: rgba(74,139,196,0.2); }
+.tag-fic { background: var(--c-fic-bg); color: var(--c-fic); border-color: rgba(155,114,207,0.2); }
+.tag-reading { background: var(--c-reading-bg); color: var(--c-reading); border-color: rgba(76,175,125,0.2); }
+.tag-want { background: var(--c-want-bg); color: var(--c-want); border-color: rgba(232,170,58,0.2); }
+.tag-read { background: var(--c-done-bg); color: var(--c-text2); border-color: rgba(255,255,255,0.1); }
+
+.stars { color: var(--c-gold); font-size: 12px; letter-spacing: 1px; }
+.stars .empty { color: var(--c-border2); }
+
+.card-notes {
+  font-size: 12px;
+  color: var(--c-text2);
+  font-style: italic;
+  font-family: var(--serif);
+  border-left: 2px solid var(--c-border2);
+  padding-left: 10px;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--c-text3);
+  border-top: 1px solid var(--c-border);
+  padding-top: 9px;
+  margin-top: 2px;
+}
+.card-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--c-gold);
+  font-size: 11px;
+  text-decoration: none;
+  transition: opacity 0.12s;
+}
+.card-link:hover { opacity: 0.7; }
+.card-link svg { width: 10px; height: 10px; }
+.card-date { font-size: 10.5px; color: var(--c-text3); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 5rem 2rem;
+}
+.empty-state .empty-icon {
+  font-size: 48px; margin-bottom: 14px;
+  filter: grayscale(0.3);
+}
+.empty-state h3 {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--c-text2);
+  margin-bottom: 8px;
+}
+.empty-state p { font-size: 13px; color: var(--c-text3); }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(8,6,4,0.8);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--c-bg2);
+  border: 1px solid var(--c-border2);
+  border-radius: var(--r-lg);
+  width: 100%; max-width: 520px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  transform: translateY(24px) scale(0.97);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-backdrop.open .modal { transform: none; }
+
+.modal-header {
+  padding: 1.25rem 1.5rem 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--c-border);
+  padding-bottom: 1rem;
+}
+.modal-title { font-family: var(--serif); font-size: 22px; font-weight: 400; }
+.close-btn {
+  width: 30px; height: 30px; border-radius: 7px;
+  border: 1px solid var(--c-border2); background: var(--c-bg3);
+  cursor: pointer; font-size: 16px; color: var(--c-text2);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.close-btn:hover { background: var(--c-bg4); color: var(--c-text); }
+.modal-body { padding: 1.25rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 14px; }
+
+/* Type toggle */
+.type-toggle { display: flex; gap: 8px; }
+.type-btn {
+  flex: 1; padding: 9px;
+  border-radius: 8px;
+  border: 1px solid var(--c-border2);
+  background: transparent;
+  font-family: var(--sans); font-size: 13px; font-weight: 400;
+  cursor: pointer; color: var(--c-text2);
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.type-btn.active-book { border-color: rgba(74,139,196,0.5); background: var(--c-book-bg); color: var(--c-book); }
+.type-btn.active-fic { border-color: rgba(155,114,207,0.5); background: var(--c-fic-bg); color: var(--c-fic); }
+
+/* Fields */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 11px; font-weight: 500; color: var(--c-text2); letter-spacing: 0.05em; text-transform: uppercase; }
+.field input, .field select, .field textarea {
+  padding: 9px 12px;
+  border: 1px solid var(--c-border2);
+  border-radius: 8px;
+  background: var(--c-bg3);
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--c-text);
+  outline: none;
+  transition: all 0.15s;
+  width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--c-gold);
+  box-shadow: 0 0 0 3px rgba(200,146,58,0.1);
+}
+.field textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.field select option { background: var(--c-bg3); }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Star picker */
+.star-picker { display: flex; gap: 3px; }
+.star-picker button {
+  background: none; border: none; cursor: pointer;
+  font-size: 24px; color: var(--c-border2);
+  transition: color 0.1s, transform 0.1s;
+  padding: 0 2px; line-height: 1;
+}
+.star-picker button:hover, .star-picker button.lit { color: var(--c-gold); }
+.star-picker button:hover { transform: scale(1.2); }
+
+/* Modal footer */
+.modal-footer {
+  padding: 0 1.5rem 1.5rem;
+  display: flex; gap: 10px; justify-content: flex-end;
+  border-top: 1px solid var(--c-border);
+  padding-top: 1rem; margin-top: 0.5rem;
+}
+.btn-cancel {
+  padding: 9px 20px; border-radius: 8px;
+  border: 1px solid var(--c-border2); background: transparent;
+  font-family: var(--sans); font-size: 13px;
+  cursor: pointer; color: var(--c-text2);
+  transition: all 0.12s;
+}
+.btn-cancel:hover { background: var(--c-bg3); color: var(--c-text); }
+.btn-save {
+  padding: 9px 24px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg, var(--c-gold), var(--c-gold2));
+  color: #1a1008; font-family: var(--sans); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.12s;
+  box-shadow: 0 4px 12px rgba(200,146,58,0.25);
+}
+.btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(200,146,58,0.35); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; right: 28px;
+  background: var(--c-bg3);
+  border: 1px solid var(--c-border2);
+  color: var(--c-text);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  opacity: 0; pointer-events: none; z-index: 300;
+  transform: translateY(16px) scale(0.95);
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 8px;
+}
+.toast.show { opacity: 1; transform: none; }
+.toast-icon { font-size: 15px; }
+
+/* ── LOADING ── */
+.loading-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem;
+  color: var(--c-text3);
+  font-size: 13px;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-border2); border-radius: 4px; }
+
+/* ── AO3 IMPORT ── */
+.ao3-import-wrap {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--c-bg3);
+  border: 1px dashed var(--c-border2);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+.ao3-import-wrap input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--c-border2);
+  border-radius: 7px;
+  background: var(--c-bg2);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--c-text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ao3-import-wrap input:focus { border-color: var(--c-fic); }
+.ao3-import-wrap input::placeholder { color: var(--c-text3); }
+.btn-ao3 {
+  padding: 7px 14px;
+  border-radius: 7px; border: none;
+  background: var(--c-fic-bg);
+  border: 1px solid rgba(168,130,216,0.35);
+  color: var(--c-fic);
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-ao3:hover { background: rgba(168,130,216,0.2); }
+.btn-ao3:disabled { opacity: 0.5; cursor: not-allowed; }
+.ao3-status {
+  font-size: 11px;
+  color: var(--c-text3);
+  min-height: 16px;
+  transition: color 0.2s;
+}
+.ao3-status.ok { color: var(--c-reading); }
+.ao3-status.err { color: var(--c-red); }
+
+/* ── AO3 METADATA TAGS on cards ── */
+.ao3-meta {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-top: 2px;
+}
+.ao3-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--sans);
+  background: var(--c-bg4);
+  color: var(--c-text2);
+  border: 1px solid var(--c-border2);
+  line-height: 1.6;
+}
+.ao3-tag.warning { background: rgba(184,64,48,0.12); color: #e07060; border-color: rgba(184,64,48,0.25); }
+.ao3-tag.category { background: var(--c-fic-bg); color: var(--c-fic); border-color: rgba(168,130,216,0.25); }
+.ao3-tag.rating { background: rgba(200,150,58,0.12); color: var(--c-gold2); border-color: rgba(200,150,58,0.25); }
+.ao3-tag.fandom { background: var(--c-book-bg); color: var(--c-book); border-color: rgba(90,159,212,0.25); }
+
+/* ── DROP OVERLAY ── */
+.drop-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(22,18,16,0.85);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.15s;
+}
+.drop-overlay.visible { opacity: 1; pointer-events: all; }
+.drop-overlay-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  border: 2px dashed var(--c-fic);
+  border-radius: 20px;
+  padding: 48px 64px;
+  color: var(--c-fic);
+  animation: dropPulse 1.5s ease-in-out infinite;
+}
+@keyframes dropPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(168,130,216,0.2); }
+  50%      { box-shadow: 0 0 0 16px rgba(168,130,216,0); }
+}
+.drop-overlay-text {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 680px) {
+  .layout { grid-template-columns: 1fr; }
+  aside { display: none; }
+  main { padding: 1rem; }
+  .entries-grid { grid-template-columns: 1fr; }
+  .field-row { grid-template-columns: 1fr; }
+  .top-bar { flex-wrap: wrap; }
+  .sort-wrap { width: 100%; }
+  .toast { right: 16px; bottom: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">§</div>
+    The <em>Library</em>
+  </div>
+  <div class="header-right">
+    <div class="sync-indicator" id="sync-indicator">
+      <div class="sync-dot"></div>
+      <span id="sync-text">Loading…</span>
+    </div>
+    <button class="btn-add" onclick="openModal()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      Add entry
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-label">Browse</div>
+    <button class="nav-item active" onclick="setFilter('all',this)">
+      <span style="font-size:13px">◈</span> All entries <span class="count" id="cnt-all">—</span>
+    </button>
+    <button class="nav-item" onclick="setFilter('book',this)">
+      <span class="nav-dot" style="background:var(--c-book)"></span> Books <span class="count" id="cnt-book">—</span>
+    </button>
+    <button class="nav-item" onclick="setFilter('fic',this)">
+      <span class="nav-dot" style="background:var(--c-fic)"></span> Fanfiction <span class="count" id="cnt-fic">—</span>
+    </button>
+
+    <div class="sidebar-label">Status</div>
+    <button class="nav-item" onclick="setFilter('reading',this)">
+      <span class="nav-dot" style="background:var(--c-reading)"></span> Reading now <span class="count" id="cnt-reading">—</span>
+    </button>
+    <button class="nav-item" onclick="setFilter('want',this)">
+      <span class="nav-dot" style="background:var(--c-want)"></span> Want to read <span class="count" id="cnt-want">—</span>
+    </button>
+    <button class="nav-item" onclick="setFilter('read',this)">
+      <span class="nav-dot" style="background:var(--c-text3)"></span> Finished <span class="count" id="cnt-read">—</span>
+    </button>
+
+    <div class="sidebar-label">Stats</div>
+    <div class="stats-box">
+      <div class="stat-item">
+        <div class="stat-num" id="stat-total">—</div>
+        <div class="stat-lbl">Total</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="stat-finished">—</div>
+        <div class="stat-lbl">Finished</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="stat-avg">—</div>
+        <div class="stat-lbl">Avg rating</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="stat-fandoms">—</div>
+        <div class="stat-lbl">Fandoms</div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="top-bar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="9" cy="9" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/>
+        </svg>
+        <input id="search" type="text" placeholder="Search title, author, fandom, notes…" oninput="render()" />
+      </div>
+      <div class="sort-wrap">
+        <span class="sort-label">Sort:</span>
+        <select class="sort-select" id="sort-select" onchange="render()">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="title">A–Z</option>
+          <option value="rating">Rating</option>
+        </select>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="view-grid" onclick="setView('grid')" title="Grid view">
+          <svg viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>
+        </button>
+        <button class="view-btn" id="view-list" onclick="setView('list')" title="List view">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="1" y1="3" x2="13" y2="3"/><line x1="1" y1="7" x2="13" y2="7"/><line x1="1" y1="11" x2="13" y2="11"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <button class="chip active-all" data-chip="all" onclick="setChip('all',this)">All</button>
+      <button class="chip" data-chip="book" onclick="setChip('book',this)">⊞ Books</button>
+      <button class="chip" data-chip="fic" onclick="setChip('fic',this)">❧ Fanfic</button>
+      <button class="chip" data-chip="reading" onclick="setChip('reading',this)">● Reading</button>
+      <button class="chip" data-chip="want" onclick="setChip('want',this)">◯ Want</button>
+      <button class="chip" data-chip="read" onclick="setChip('read',this)">✓ Finished</button>
+      <span class="result-count" id="result-count"></span>
+    </div>
+
+    <div class="entries-grid" id="entries-grid">
+      <div class="loading-state">Loading your shelf…</div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeOnBackdrop(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">Add to shelf</h2>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="type-toggle">
+        <button class="type-btn active-book" id="btn-book" onclick="setType('book')">⊞ Book</button>
+        <button class="type-btn" id="btn-fic" onclick="setType('fic')">❧ Fanfiction</button>
+      </div>
+
+      <!-- AO3 import (shown only for fanfic) -->
+      <div id="ao3-import-section" style="display:none">
+        <div class="ao3-import-wrap">
+          <input id="ao3-url-input" type="url" placeholder="Paste an AO3 work URL to auto-fill…" />
+          <button class="btn-ao3" id="btn-ao3-fetch" onclick="fetchAO3()">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 1v6M4 4l3-3 3 3"/><path d="M2 9v2a1 1 0 001 1h8a1 1 0 001-1V9"/></svg>
+            Import
+          </button>
+        </div>
+        <div class="ao3-status" id="ao3-status"></div>
+      </div>
+      <div class="field">
+        <label>Title *</label>
+        <input id="f-title" type="text" placeholder="Enter title" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Author / Creator</label>
+          <input id="f-author" type="text" placeholder="Name" />
+        </div>
+        <div class="field">
+          <label id="fandom-label">Genre / Fandom</label>
+          <input id="f-fandom" type="text" placeholder="e.g. Fantasy" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Status</label>
+          <select id="f-status">
+            <option value="want">Want to read</option>
+            <option value="reading">Reading now</option>
+            <option value="read">Finished</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="length-label">Pages / Words</label>
+          <input id="f-length" type="text" placeholder="e.g. 342 pages" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Link to work</label>
+        <input id="f-url" type="url" placeholder="https://archiveofourown.org/…" />
+      </div>
+      <div class="field">
+        <label>Your rating</label>
+        <div class="star-picker" id="star-picker">
+          <button type="button" onclick="setRating(1)">★</button>
+          <button type="button" onclick="setRating(2)">★</button>
+          <button type="button" onclick="setRating(3)">★</button>
+          <button type="button" onclick="setRating(4)">★</button>
+          <button type="button" onclick="setRating(5)">★</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes & thoughts</label>
+        <textarea id="f-notes" placeholder="What did you think? Any memorable moments?"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEntry()">Save to shelf</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="toast-icon" id="toast-icon"></span><span id="toast-msg"></span></div>
+
+<div class="drop-overlay" id="drop-overlay">
+  <div class="drop-overlay-inner">
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+      <path d="M24 4v28M14 22l10 10 10-10"/>
+      <path d="M8 36v4a2 2 0 002 2h28a2 2 0 002-2v-4"/>
+    </svg>
+    <div class="drop-overlay-text">Drop AO3 link to import</div>
+  </div>
+</div>
+
+<script>
+// ── Storage helpers using window.storage (cross-device cloud) ──
+const STORAGE_KEY = 'readshelf_entries_v3';
+
+let entries = [];
+let activeFilter = 'all';
+let currentRating = 0;
+let editingId = null;
+let currentType = 'book';
+let currentView = 'grid';
+let isLoading = true;
+
+// ── Init ──
+async function init() {
+  setSyncState('syncing', 'Loading…');
+  try {
+    const result = await window.storage.get(STORAGE_KEY);
+    if (result && result.value) {
+      entries = JSON.parse(result.value);
+    } else {
+      entries = [];
+    }
+    setSyncState('saved', 'Synced');
+  } catch (e) {
+    // Key doesn't exist yet — fresh start
+    entries = [];
+    setSyncState('idle', 'Cloud ready');
+  }
+  isLoading = false;
+  render();
+}
+
+async function persistEntries() {
+  setSyncState('syncing', 'Saving…');
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(entries));
+    setSyncState('saved', 'Saved ✓');
+    setTimeout(() => setSyncState('idle', 'Synced'), 2000);
+  } catch (e) {
+    setSyncState('idle', 'Save failed');
+    console.error('Storage error:', e);
+  }
+}
+
+function setSyncState(state, text) {
+  const el = document.getElementById('sync-indicator');
+  const txt = document.getElementById('sync-text');
+  el.className = 'sync-indicator ' + state;
+  txt.textContent = text;
+}
+
+// ── Toast ──
+function toast(msg, icon = '✓') {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ── Type toggle ──
+function setType(t) {
+  currentType = t;
+  document.getElementById('btn-book').className = 'type-btn' + (t === 'book' ? ' active-book' : '');
+  document.getElementById('btn-fic').className = 'type-btn' + (t === 'fic' ? ' active-fic' : '');
+  document.getElementById('fandom-label').textContent = t === 'fic' ? 'Fandom' : 'Genre';
+  document.getElementById('length-label').textContent = t === 'fic' ? 'Word count' : 'Page count';
+  document.getElementById('f-fandom').placeholder = t === 'fic' ? 'e.g. Harry Potter, MCU' : 'e.g. Fantasy, Sci-Fi';
+  document.getElementById('ao3-import-section').style.display = t === 'fic' ? 'flex' : 'none';
+  document.getElementById('ao3-import-section').style.flexDirection = 'column';
+  document.getElementById('ao3-import-section').style.gap = '4px';
+}
+
+// ── AO3 Import ──
+let ao3Data = null; // stores parsed metadata for current modal session
+
+async function fetchAO3() {
+  const raw = document.getElementById('ao3-url-input').value.trim();
+  if (!raw) return;
+
+  // Normalise URL — strip chapter paths, keep work ID
+  const match = raw.match(/archiveofourown\.org\/works\/(\d+)/);
+  if (!match) {
+    setAO3Status('Not a valid AO3 work URL', 'err');
+    return;
+  }
+  const workId = match[1];
+  // Fetch the base work URL — for adult works the warning page itself
+  // contains all the metadata (tags, rating, etc.) so we don't need to bypass it.
+  // We also try view_adult=true as a fallback in case the proxy forwards cookies.
+  const workUrl = `https://archiveofourown.org/works/${workId}`;
+
+  const btn = document.getElementById('btn-ao3-fetch');
+  btn.disabled = true;
+  setAO3Status('Fetching…', '');
+
+  try {
+    // Try multiple CORS proxies in sequence
+    const proxies = [
+      async (url) => {
+        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) throw new Error('allorigins failed');
+        const j = await r.json();
+        if (!j.contents) throw new Error('no contents');
+        return j.contents;
+      },
+      async (url) => {
+        const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) throw new Error('corsproxy failed');
+        return await r.text();
+      },
+      async (url) => {
+        const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) throw new Error('codetabs failed');
+        return await r.text();
+      },
+    ];
+
+    let html = null;
+    let lastErr = null;
+    for (let i = 0; i < proxies.length; i++) {
+      try {
+        setAO3Status(`Fetching… (attempt ${i + 1}/${proxies.length})`, '');
+        html = await proxies[i](workUrl);
+        if (html && html.length > 500) break;
+      } catch (e) {
+        lastErr = e;
+        console.warn(`Proxy ${i + 1} failed:`, e.message);
+      }
+    }
+    if (!html || html.length < 500) throw lastErr || new Error('All proxies failed');
+
+    // Parse with DOMParser
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Detect if we landed on the adult content warning page
+    // The warning page has a .adult-banner or a form with proceed button,
+    // but crucially it still contains the full work metadata in .work.meta
+    const isAdultPage = !!doc.querySelector('.adult-banner, #adult-banner, [data-proceed]')
+      || html.includes('This work could have adult content');
+
+    // Title — on warning page it's in h2.title or the meta og:title
+    let title = '';
+    const titleEl = doc.querySelector('h2.title.heading');
+    if (titleEl) {
+      title = titleEl.textContent.trim();
+    } else {
+      const ogTitle = doc.querySelector('meta[property="og:title"]');
+      if (ogTitle) title = ogTitle.getAttribute('content').replace(/ - Archive of Our Own$/, '').trim();
+    }
+
+    // Author — on warning page it's still in h3.byline or byline links
+    const authorEl = doc.querySelector('h3.byline.heading a, .byline a');
+    const author = authorEl ? authorEl.textContent.trim() : '';
+
+    // Summary
+    const summaryEl = doc.querySelector('.summary.module blockquote, .summary blockquote');
+    const summary = summaryEl ? summaryEl.textContent.trim().slice(0, 300) : '';
+
+    // Fandoms — same selector works on both pages
+    const fandoms = [...doc.querySelectorAll('.fandom.tags a.tag, .fandoms a.tag')].map(a => a.textContent.trim());
+
+    // Rating
+    const ratingEl = doc.querySelector('.rating.tags a.tag, .rating a.tag, span.rating');
+    const ao3Rating = ratingEl ? ratingEl.textContent.trim() : '';
+
+    // Categories (M/M, F/F, Gen, etc.)
+    const categories = [...doc.querySelectorAll('.category.tags a.tag, .categories a.tag')].map(a => a.textContent.trim());
+
+    // Warnings
+    const warnings = [...doc.querySelectorAll('.warning.tags a.tag, .warnings a.tag')]
+      .map(a => a.textContent.trim())
+      .filter(w => w !== 'No Archive Warnings Apply' && w !== 'Creator Chose Not To Use Archive Warnings');
+
+    // Relationships
+    const relationships = [...doc.querySelectorAll('.relationship.tags a.tag, .relationships a.tag')].map(a => a.textContent.trim());
+
+    // Characters
+    const characters = [...doc.querySelectorAll('.character.tags a.tag, .characters a.tag')].map(a => a.textContent.trim());
+
+    // Additional tags
+    const addlTags = [...doc.querySelectorAll('.freeform.tags a.tag, .freeforms a.tag')].map(a => a.textContent.trim());
+
+    // Word count
+    const wordCountEl = doc.querySelector('dd.words');
+    const wordCount = wordCountEl ? wordCountEl.textContent.trim().replace(/,/g, '') : '';
+
+    // Chapters
+    const chaptersEl = doc.querySelector('dd.chapters');
+    const chapters = chaptersEl ? chaptersEl.textContent.trim() : '';
+
+    if (!title) {
+      // If we got the adult warning page but still no title, the proxy may have
+      // returned a login redirect. Give a clearer message.
+      const hint = isAdultPage
+        ? 'Got the adult warning page but could not read metadata — the proxy may require a login. Try again in a moment.'
+        : 'Could not parse work — try opening the AO3 link in your browser first, then retry.';
+      setAO3Status(hint, 'err');
+      btn.disabled = false;
+      return;
+    }
+
+    // Store parsed data
+    ao3Data = { fandoms, ao3Rating, categories, warnings, relationships, characters, addlTags, chapters };
+
+    // Fill in the form
+    document.getElementById('f-title').value = title;
+    document.getElementById('f-author').value = author;
+    document.getElementById('f-fandom').value = fandoms.slice(0, 2).join(', ');
+    if (wordCount) document.getElementById('f-length').value = Number(wordCount).toLocaleString() + ' words';
+    if (!document.getElementById('f-url').value) document.getElementById('f-url').value = `https://archiveofourown.org/works/${workId}`;
+    if (summary && !document.getElementById('f-notes').value) document.getElementById('f-notes').value = summary;
+
+    const parts = [];
+    if (ao3Rating) parts.push(ao3Rating);
+    if (categories.length) parts.push(categories.join(', '));
+    if (chapters) parts.push(`${chapters} chapters`);
+    setAO3Status('Imported: ' + parts.filter(Boolean).join(' · '), 'ok');
+
+  } catch(err) {
+    setAO3Status('All proxies failed — try again in a moment, or open the AO3 link in your browser first', 'err');
+    console.error(err);
+  }
+  btn.disabled = false;
+}
+
+function setAO3Status(msg, cls) {
+  const el = document.getElementById('ao3-status');
+  el.textContent = msg;
+  el.className = 'ao3-status' + (cls ? ' ' + cls : '');
+}
+function setRating(n) {
+  currentRating = currentRating === n ? 0 : n;
+  const btns = document.querySelectorAll('#star-picker button');
+  btns.forEach((b, i) => b.classList.toggle('lit', i < currentRating));
+}
+
+// ── Modal ──
+function openModal(id) {
+  editingId = id || null;
+  currentRating = 0;
+  currentType = 'book';
+  ao3Data = null;
+  setType('book');
+  setRating(0);
+  document.getElementById('modal-title').textContent = id ? 'Edit entry' : 'Add to shelf';
+  document.getElementById('ao3-url-input').value = '';
+  setAO3Status('', '');
+  ['f-title','f-author','f-fandom','f-status','f-length','f-url','f-notes'].forEach(fid => {
+    document.getElementById(fid).value = '';
+  });
+  document.getElementById('f-status').value = 'want';
+  if (id) {
+    const e = entries.find(x => x.id === id);
+    if (e) {
+      setType(e.type);
+      document.getElementById('f-title').value = e.title;
+      document.getElementById('f-author').value = e.author || '';
+      document.getElementById('f-fandom').value = e.fandom || '';
+      document.getElementById('f-status').value = e.status;
+      document.getElementById('f-length').value = e.length || '';
+      document.getElementById('f-url').value = e.url || '';
+      document.getElementById('f-notes').value = e.notes || '';
+      currentRating = e.rating || 0;
+      const btns = document.querySelectorAll('#star-picker button');
+      btns.forEach((b, i) => b.classList.toggle('lit', i < currentRating));
+      if (e.ao3Data) ao3Data = e.ao3Data;
+    }
+  }
+  document.getElementById('modal-backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('f-title').focus(), 150);
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('open');
+}
+
+function closeOnBackdrop(e) {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+}
+
+async function saveEntry() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { document.getElementById('f-title').focus(); return; }
+  const entry = {
+    id: editingId || Date.now(),
+    type: currentType, title,
+    author: document.getElementById('f-author').value.trim(),
+    fandom: document.getElementById('f-fandom').value.trim(),
+    status: document.getElementById('f-status').value,
+    length: document.getElementById('f-length').value.trim(),
+    url: document.getElementById('f-url').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+    rating: currentRating || null,
+    ao3Data: ao3Data || null,
+    date: editingId
+      ? (entries.find(x => x.id === editingId) || {}).date || new Date().toISOString().slice(0,10)
+      : new Date().toISOString().slice(0,10),
+  };
+  if (editingId) {
+    const idx = entries.findIndex(x => x.id === editingId);
+    if (idx !== -1) entries[idx] = entry;
+    toast('Entry updated', '✎');
+  } else {
+    entries.push(entry);
+    toast('Added to shelf', '◈');
+  }
+  closeModal();
+  render();
+  await persistEntries();
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Remove this entry from your shelf?')) return;
+  entries = entries.filter(e => e.id !== id);
+  render();
+  toast('Entry removed', '✕');
+  await persistEntries();
+}
+
+// ── Filters & view ──
+function setFilter(val, el) {
+  activeFilter = val;
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // Sync chips
+  document.querySelectorAll('.chip').forEach(c => {
+    c.className = 'chip' + (c.dataset.chip === val ? ' active-' + val : '');
+  });
+  render();
+}
+
+function setChip(val, el) {
+  activeFilter = val;
+  document.querySelectorAll('.chip').forEach(c => {
+    c.className = 'chip' + (c.dataset.chip === val ? ' active-' + val : '');
+  });
+  // Sync sidebar
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  render();
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('view-grid').classList.toggle('active', v === 'grid');
+  document.getElementById('view-list').classList.toggle('active', v === 'list');
+  const grid = document.getElementById('entries-grid');
+  grid.classList.toggle('list-view', v === 'list');
+}
+
+// ── Helpers ──
+function starsHtml(n) {
+  if (!n) return '';
+  return `<span class="stars">${'★'.repeat(n)}<span class="empty">${'★'.repeat(5-n)}</span></span>`;
+}
+function statusTag(s) {
+  const L = { read:'Finished', reading:'Reading', want:'Want to read' };
+  return `<span class="tag tag-${s}">${L[s]}</span>`;
+}
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function ao3MetaHtml(d) {
+  if (!d) return '';
+  const tags = [];
+  if (d.ao3Rating) tags.push(`<span class="ao3-tag rating">${escHtml(d.ao3Rating)}</span>`);
+  (d.categories||[]).forEach(c => tags.push(`<span class="ao3-tag category">${escHtml(c)}</span>`));
+  (d.warnings||[]).filter(w => w && w !== 'No Archive Warnings Apply').forEach(w =>
+    tags.push(`<span class="ao3-tag warning">${escHtml(w)}</span>`)
+  );
+  (d.relationships||[]).slice(0,3).forEach(r => tags.push(`<span class="ao3-tag">${escHtml(r)}</span>`));
+  (d.characters||[]).slice(0,4).forEach(c => tags.push(`<span class="ao3-tag">${escHtml(c)}</span>`));
+  (d.addlTags||[]).slice(0,5).forEach(t => tags.push(`<span class="ao3-tag">${escHtml(t)}</span>`));
+  if (!tags.length) return '';
+  return `<div class="ao3-meta">${tags.join('')}</div>`;
+}
+
+// ── Render ──
+function render() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const sort = document.getElementById('sort-select').value;
+
+  let filtered = entries.filter(e => {
+    if (activeFilter === 'book' || activeFilter === 'fic') return e.type === activeFilter;
+    if (['reading','want','read'].includes(activeFilter)) return e.status === activeFilter;
+    return true;
+  });
+
+  if (q) {
+    filtered = filtered.filter(e => {
+      const ao3Fields = e.ao3Data
+        ? [...(e.ao3Data.relationships||[]), ...(e.ao3Data.characters||[]),
+           ...(e.ao3Data.addlTags||[]), ...(e.ao3Data.categories||[]),
+           ...(e.ao3Data.fandoms||[])].join(' ')
+        : '';
+      return [e.title, e.author, e.fandom, e.notes, ao3Fields]
+        .some(f => (f||'').toLowerCase().includes(q));
+    });
+  }
+
+  if (sort === 'newest') filtered.sort((a,b) => b.id - a.id);
+  else if (sort === 'oldest') filtered.sort((a,b) => a.id - b.id);
+  else if (sort === 'title') filtered.sort((a,b) => (a.title||'').localeCompare(b.title));
+  else if (sort === 'rating') filtered.sort((a,b) => (b.rating||0) - (a.rating||0));
+
+  // Counts
+  const cnt = { all: entries.length, book: 0, fic: 0, reading: 0, want: 0, read: 0 };
+  entries.forEach(e => { cnt[e.type]++; cnt[e.status]++; });
+  Object.keys(cnt).forEach(k => {
+    const el = document.getElementById('cnt-' + k);
+    if (el) el.textContent = cnt[k];
+  });
+
+  // Stats
+  document.getElementById('stat-total').textContent = entries.length;
+  document.getElementById('stat-finished').textContent = cnt.read;
+  const rated = entries.filter(e => e.rating);
+  document.getElementById('stat-avg').textContent = rated.length
+    ? (rated.reduce((s,e) => s + e.rating, 0) / rated.length).toFixed(1) : '—';
+  document.getElementById('stat-fandoms').textContent =
+    new Set(entries.filter(e => e.fandom).map(e => e.fandom.toLowerCase())).size;
+
+  // Result count
+  document.getElementById('result-count').textContent =
+    filtered.length === entries.length
+      ? `${entries.length} entr${entries.length !== 1 ? 'ies' : 'y'}`
+      : `${filtered.length} of ${entries.length}`;
+
+  const grid = document.getElementById('entries-grid');
+  grid.classList.toggle('list-view', currentView === 'list');
+
+  if (isLoading) {
+    grid.innerHTML = `<div class="loading-state">Loading your shelf…</div>`;
+    return;
+  }
+
+  if (!filtered.length) {
+    const isEmpty = !entries.length;
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">${q ? '◎' : isEmpty ? '§' : '❧'}</div>
+      <h3>${q ? 'No results found' : isEmpty ? 'Your shelf is empty' : 'Nothing here yet'}</h3>
+      <p>${q ? `No entries match "${escHtml(q)}"` : isEmpty ? 'Add your first book or fanfiction to get started' : 'Try a different filter'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(e => {
+    const safeTitle = escHtml(e.title);
+    const titleHtml = e.url
+      ? `<a href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer">${safeTitle}</a>`
+      : safeTitle;
+
+    const isListView = currentView === 'list';
+    if (isListView) {
+      return `<div class="card" data-type="${e.type}" data-id="${e.id}">
+        <div class="card-body">
+          <div class="card-header" style="margin-bottom:0">
+            <div class="card-title" style="font-size:15px">${titleHtml}</div>
+            <div class="card-actions">
+              <button class="icon-btn" onclick="openModal(${e.id})" title="Edit">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11.5 2.5l2 2-9 9H2.5v-2l9-9z"/></svg>
+              </button>
+              <button class="icon-btn del" onclick="deleteEntry(${e.id})" title="Remove">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,4 13,4"/><path d="M5 4V3h6v1M6 7v5M10 7v5"/><path d="M4 4l1 9h6l1-9"/></svg>
+              </button>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+            ${e.author ? `<span class="card-author">by ${escHtml(e.author)}</span>` : ''}
+            ${e.fandom ? `<span class="card-fandom">· ${escHtml(e.fandom)}</span>` : ''}
+            <span class="tag tag-${e.type}" style="font-size:10px">${e.type === 'book' ? '⊞' : '❧'} ${e.type === 'book' ? 'Book' : 'Fanfic'}</span>
+            ${statusTag(e.status)}
+            ${e.rating ? starsHtml(e.rating) : ''}
+            ${e.url ? `<a class="card-link" href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer">Read online <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h6v6"/><line x1="2" y1="8" x2="8" y2="2"/></svg></a>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="card" data-type="${e.type}" data-id="${e.id}">
+      <div class="card-header">
+        <div class="card-title">${titleHtml}</div>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="openModal(${e.id})" title="Edit">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11.5 2.5l2 2-9 9H2.5v-2l9-9z"/></svg>
+          </button>
+          <button class="icon-btn del" onclick="deleteEntry(${e.id})" title="Remove">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,4 13,4"/><path d="M5 4V3h6v1M6 7v5M10 7v5"/><path d="M4 4l1 9h6l1-9"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="card-sub">
+        ${e.author ? `<div class="card-author">by ${escHtml(e.author)}</div>` : ''}
+        ${e.fandom ? `<div class="card-fandom">${escHtml(e.fandom)}</div>` : ''}
+      </div>
+      <div class="card-tags">
+        <span class="tag tag-${e.type}">${e.type === 'book' ? '⊞ Book' : '❧ Fanfic'}</span>
+        ${statusTag(e.status)}
+        ${e.rating ? starsHtml(e.rating) : ''}
+      </div>
+      ${ao3MetaHtml(e.ao3Data)}
+      ${e.notes ? `<div class="card-notes">${escHtml(e.notes)}</div>` : ''}
+      <div class="card-meta">
+        <span>${escHtml(e.length || '')} ${e.date ? `<span class="card-date">· ${fmtDate(e.date)}</span>` : ''}</span>
+        ${e.url ? `<a class="card-link" href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer">Read online <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h6v6"/><line x1="2" y1="8" x2="8" y2="2"/></svg></a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Drag & Drop / Paste AO3 links ──
+function isAO3Url(str) {
+  return /archiveofourown\.org\/works\/\d+/.test(str);
+}
+
+async function handleAO3QuickImport(url) {
+  // If modal is already open and set to fic, just fill the URL field and fetch
+  const modalOpen = document.getElementById('modal-backdrop').classList.contains('open');
+  if (!modalOpen) {
+    openModal();
+    setType('fic');
+    // wait for modal animation
+    await new Promise(r => setTimeout(r, 180));
+  } else if (currentType !== 'fic') {
+    setType('fic');
+  }
+  document.getElementById('ao3-url-input').value = url;
+  await fetchAO3();
+}
+
+// Global paste (when not focused on an input)
+document.addEventListener('paste', async e => {
+  const active = document.activeElement;
+  const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
+  if (isInput) return; // let normal paste happen
+  const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+  if (isAO3Url(text)) {
+    e.preventDefault();
+    await handleAO3QuickImport(text);
+  }
+});
+
+// Drag over — show overlay
+document.addEventListener('dragover', e => {
+  const items = [...(e.dataTransfer.items || [])];
+  const hasText = items.some(i => i.kind === 'string');
+  if (hasText) {
+    e.preventDefault();
+    document.getElementById('drop-overlay').classList.add('visible');
+  }
+});
+
+document.addEventListener('dragleave', e => {
+  if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
+    document.getElementById('drop-overlay').classList.remove('visible');
+  }
+});
+
+document.addEventListener('drop', async e => {
+  e.preventDefault();
+  document.getElementById('drop-overlay').classList.remove('visible');
+  const text = e.dataTransfer.getData('text/plain').trim()
+    || e.dataTransfer.getData('text/uri-list').trim()
+    || e.dataTransfer.getData('text').trim();
+  if (isAO3Url(text)) {
+    await handleAO3QuickImport(text);
+  }
+});
+
+init();
+</script>
+</body>
+</html>
