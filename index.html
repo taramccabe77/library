@@ -1023,7 +1023,7 @@ async function fetchAO3() {
   setAO3Status('Fetching…', '');
 
   try {
-    // Try multiple CORS proxies in sequence
+    // First try CORS proxies (free, no credits)
     const proxies = [
       async (url) => {
         const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
@@ -1045,86 +1045,116 @@ async function fetchAO3() {
     ];
 
     let html = null;
-    let lastErr = null;
     for (let i = 0; i < proxies.length; i++) {
       try {
-        setAO3Status(`Fetching… (attempt ${i + 1}/${proxies.length})`, '');
-        html = await proxies[i](workUrl);
-        if (html && html.length > 500) break;
+        setAO3Status(`Fetching… (${i + 1}/${proxies.length})`, '');
+        const result = await proxies[i](workUrl);
+        if (result && result.length > 500) { html = result; break; }
       } catch (e) {
-        lastErr = e;
         console.warn(`Proxy ${i + 1} failed:`, e.message);
       }
     }
-    if (!html || html.length < 500) throw lastErr || new Error('All proxies failed');
 
-    // Parse with DOMParser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // If proxies worked, parse the HTML directly
+    if (html) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
 
-    // Detect if we landed on the adult content warning page
-    // The warning page has a .adult-banner or a form with proceed button,
-    // but crucially it still contains the full work metadata in .work.meta
-    const isAdultPage = !!doc.querySelector('.adult-banner, #adult-banner, [data-proceed]')
-      || html.includes('This work could have adult content');
+      const titleEl = doc.querySelector('h2.title.heading');
+      let title = titleEl ? titleEl.textContent.trim() : '';
+      if (!title) {
+        const ogTitle = doc.querySelector('meta[property="og:title"]');
+        if (ogTitle) title = ogTitle.getAttribute('content').replace(/ - Archive of Our Own$/, '').trim();
+      }
+      const authorEl = doc.querySelector('h3.byline.heading a, .byline a');
+      const author = authorEl ? authorEl.textContent.trim() : '';
+      const summaryEl = doc.querySelector('.summary.module blockquote, .summary blockquote');
+      const summary = summaryEl ? summaryEl.textContent.trim().slice(0, 300) : '';
+      const fandoms = [...doc.querySelectorAll('.fandom.tags a.tag, .fandoms a.tag')].map(a => a.textContent.trim());
+      const ratingEl = doc.querySelector('.rating.tags a.tag, .rating a.tag, span.rating');
+      const ao3Rating = ratingEl ? ratingEl.textContent.trim() : '';
+      const categories = [...doc.querySelectorAll('.category.tags a.tag, .categories a.tag')].map(a => a.textContent.trim());
+      const warnings = [...doc.querySelectorAll('.warning.tags a.tag, .warnings a.tag')]
+        .map(a => a.textContent.trim())
+        .filter(w => w !== 'No Archive Warnings Apply' && w !== 'Creator Chose Not To Use Archive Warnings');
+      const relationships = [...doc.querySelectorAll('.relationship.tags a.tag, .relationships a.tag')].map(a => a.textContent.trim());
+      const characters = [...doc.querySelectorAll('.character.tags a.tag, .characters a.tag')].map(a => a.textContent.trim());
+      const addlTags = [...doc.querySelectorAll('.freeform.tags a.tag, .freeforms a.tag')].map(a => a.textContent.trim());
+      const wordCountEl = doc.querySelector('dd.words');
+      const wordCount = wordCountEl ? wordCountEl.textContent.trim().replace(/,/g, '') : '';
+      const chaptersEl = doc.querySelector('dd.chapters');
+      const chapters = chaptersEl ? chaptersEl.textContent.trim() : '';
 
-    // Title — on warning page it's in h2.title or the meta og:title
-    let title = '';
-    const titleEl = doc.querySelector('h2.title.heading');
-    if (titleEl) {
-      title = titleEl.textContent.trim();
-    } else {
-      const ogTitle = doc.querySelector('meta[property="og:title"]');
-      if (ogTitle) title = ogTitle.getAttribute('content').replace(/ - Archive of Our Own$/, '').trim();
+      if (title) {
+        ao3Data = { fandoms, ao3Rating, categories, warnings, relationships, characters, addlTags, chapters };
+        document.getElementById('f-title').value = title;
+        document.getElementById('f-author').value = author;
+        document.getElementById('f-fandom').value = fandoms.slice(0, 2).join(', ');
+        if (wordCount) document.getElementById('f-length').value = Number(wordCount).toLocaleString() + ' words';
+        if (!document.getElementById('f-url').value) document.getElementById('f-url').value = `https://archiveofourown.org/works/${workId}`;
+        if (summary && !document.getElementById('f-notes').value) document.getElementById('f-notes').value = summary;
+        const parts = [ao3Rating, categories.join(', '), chapters ? `${chapters} chapters` : ''].filter(Boolean);
+        setAO3Status('Imported: ' + parts.join(' · '), 'ok');
+        btn.disabled = false;
+        return;
+      }
+      // Title not found from proxy — fall through to Claude
     }
 
-    // Author — on warning page it's still in h3.byline or byline links
-    const authorEl = doc.querySelector('h3.byline.heading a, .byline a');
-    const author = authorEl ? authorEl.textContent.trim() : '';
+    // Proxies failed or returned no title — fall back to Claude API (uses credits)
+    setAO3Status('Proxies unavailable — using Claude (uses credits)…', '');
 
-    // Summary
-    const summaryEl = doc.querySelector('.summary.module blockquote, .summary blockquote');
-    const summary = summaryEl ? summaryEl.textContent.trim().slice(0, 300) : '';
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: `You are a metadata extractor. When given an AO3 work URL, use web_search to fetch the page and extract structured metadata. Return ONLY a valid JSON object with these exact fields (use null if not found):
+{
+  "title": string,
+  "author": string,
+  "summary": string (max 300 chars),
+  "fandoms": string[],
+  "ao3Rating": string,
+  "categories": string[],
+  "warnings": string[],
+  "relationships": string[],
+  "characters": string[],
+  "addlTags": string[],
+  "wordCount": string,
+  "chapters": string
+}
+Do not include any other text, explanation, or markdown — only the raw JSON object.`,
+        messages: [{ role: 'user', content: `Extract metadata from this AO3 work: ${workUrl}` }],
+      })
+    });
 
-    // Fandoms — same selector works on both pages
-    const fandoms = [...doc.querySelectorAll('.fandom.tags a.tag, .fandoms a.tag')].map(a => a.textContent.trim());
+    if (!claudeRes.ok) throw new Error(`Claude API error: ${claudeRes.status}`);
+    const claudeData = await claudeRes.json();
+    const textBlock = claudeData.content?.filter(b => b.type === 'text').pop();
+    if (!textBlock) throw new Error('No text response from Claude');
+    const clean = textBlock.text.replace(/```json|```/g, '').trim();
+    const meta = JSON.parse(clean);
 
-    // Rating
-    const ratingEl = doc.querySelector('.rating.tags a.tag, .rating a.tag, span.rating');
-    const ao3Rating = ratingEl ? ratingEl.textContent.trim() : '';
-
-    // Categories (M/M, F/F, Gen, etc.)
-    const categories = [...doc.querySelectorAll('.category.tags a.tag, .categories a.tag')].map(a => a.textContent.trim());
-
-    // Warnings
-    const warnings = [...doc.querySelectorAll('.warning.tags a.tag, .warnings a.tag')]
-      .map(a => a.textContent.trim())
-      .filter(w => w !== 'No Archive Warnings Apply' && w !== 'Creator Chose Not To Use Archive Warnings');
-
-    // Relationships
-    const relationships = [...doc.querySelectorAll('.relationship.tags a.tag, .relationships a.tag')].map(a => a.textContent.trim());
-
-    // Characters
-    const characters = [...doc.querySelectorAll('.character.tags a.tag, .characters a.tag')].map(a => a.textContent.trim());
-
-    // Additional tags
-    const addlTags = [...doc.querySelectorAll('.freeform.tags a.tag, .freeforms a.tag')].map(a => a.textContent.trim());
-
-    // Word count
-    const wordCountEl = doc.querySelector('dd.words');
-    const wordCount = wordCountEl ? wordCountEl.textContent.trim().replace(/,/g, '') : '';
-
-    // Chapters
-    const chaptersEl = doc.querySelector('dd.chapters');
-    const chapters = chaptersEl ? chaptersEl.textContent.trim() : '';
+    const title = meta.title || '';
+    const author = meta.author || '';
+    const summary = meta.summary || '';
+    const fandoms = meta.fandoms || [];
+    const ao3Rating = meta.ao3Rating || '';
+    const categories = meta.categories || [];
+    const warnings = (meta.warnings || []).filter(w =>
+      w !== 'No Archive Warnings Apply' && w !== 'Creator Chose Not To Use Archive Warnings'
+    );
+    const relationships = meta.relationships || [];
+    const characters = meta.characters || [];
+    const addlTags = meta.addlTags || [];
+    const wordCount = meta.wordCount ? String(meta.wordCount).replace(/,/g, '') : '';
+    const chapters = meta.chapters || '';
 
     if (!title) {
-      // If we got the adult warning page but still no title, the proxy may have
-      // returned a login redirect. Give a clearer message.
-      const hint = isAdultPage
-        ? 'Got the adult warning page but could not read metadata — the proxy may require a login. Try again in a moment.'
-        : 'Could not parse work — try opening the AO3 link in your browser first, then retry.';
-      setAO3Status(hint, 'err');
+      setAO3Status('Could not read metadata — the work may be restricted or unavailable', 'err');
       btn.disabled = false;
       return;
     }
@@ -1147,7 +1177,7 @@ async function fetchAO3() {
     setAO3Status('Imported: ' + parts.filter(Boolean).join(' · '), 'ok');
 
   } catch(err) {
-    setAO3Status('All proxies failed — try again in a moment, or open the AO3 link in your browser first', 'err');
+    setAO3Status('Import failed — try again in a moment', 'err');
     console.error(err);
   }
   btn.disabled = false;
