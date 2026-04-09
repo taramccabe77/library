@@ -73,6 +73,11 @@ header {
   display: flex; align-items: center; justify-content: space-between;
   height: 72px;
   overflow: hidden;
+  box-shadow:
+    0 3px 0 rgba(0,0,0,0.4),
+    0 4px 0 rgba(212,160,64,0.25),
+    0 5px 0 rgba(0,0,0,0.3),
+    0 8px 16px rgba(0,0,0,0.3);
 }
 
 
@@ -223,20 +228,53 @@ header::after {
 .layout {
   display: grid;
   grid-template-columns: 220px 1fr;
-  min-height: calc(100vh - var(--header-h));
   align-items: start;
+  min-height: calc(100vh - var(--header-h));
 }
 
 /* ── SIDEBAR ── */
 aside {
   background: var(--c-bg2);
   padding: 1.5rem 1rem 1.5rem 1.2rem;
-  position: sticky; top: var(--header-h);
+  position: sticky;
+  top: var(--header-h);
   height: calc(100vh - var(--header-h));
   overflow-y: auto;
   overflow-x: hidden;
-  position: relative;
 }
+
+/* ── MAIN COLUMN ── */
+main {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--header-h));
+  padding-bottom: 2rem;
+}
+
+/* ── SUB-HEADER ── */
+.sub-header {
+  background: var(--c-bg3);
+  padding: 0.6rem 2rem;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid rgba(212,160,64,0.12);
+}
+
+/* ── BULK BAR ── */
+.bulk-bar {
+  display: none;
+  align-items: center; gap: 10px;
+  padding: 8px 2rem;
+  background: var(--c-bg4);
+  position: sticky;
+  top: var(--header-h);
+  z-index: 11;
+}
+.bulk-bar.visible { display: flex; }
 
 /* Right pillar on sidebar */
 aside::after {
@@ -298,7 +336,6 @@ aside::before {
     );
 }
 
-main { padding-bottom: 2rem; }
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.15em;
@@ -385,8 +422,6 @@ main { padding-bottom: 2rem; }
   letter-spacing: 0.02em;
 }
 
-/* ── MAIN ── */
-main { padding: 2rem; overflow: hidden; }
 
 /* ── TOP BAR ── */
 .top-bar {
@@ -471,13 +506,13 @@ main { padding: 2rem; overflow: hidden; }
 
 /* ── ENTRIES GRID ── */
 .entries-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 1.5rem 2rem;
 }
 .entries-grid.list-view {
-  grid-template-columns: 1fr;
-  gap: 8px;
+  flex-direction: column;
 }
 
 /* ── CARD ── */
@@ -973,14 +1008,6 @@ main { padding: 2rem; overflow: hidden; }
 }
 .select-mode .card-checkbox { display: flex; }
 
-.bulk-bar {
-  display: none;
-  align-items: center; gap: 10px;
-  padding: 8px 2rem;
-  background: var(--c-bg4);
-  position: sticky; top: var(--header-h); z-index: 98;
-}
-.bulk-bar.visible { display: flex; }
 .bulk-count { font-size: 15px; color: var(--c-text2); flex: 1; }
 .bulk-btn {
   padding: 6px 14px; border-radius: 7px; border: none;
@@ -1288,54 +1315,78 @@ main { padding: 2rem; overflow: hidden; }
 <div class="version-tag" id="version-tag"></div>
 
 <script>
-// ── Storage helpers — chunked to handle large libraries ──
+// ── Storage helpers — cloud when available, localStorage fallback ──
 const STORAGE_KEY = 'readshelf_entries_v3';
-const CHUNK_SIZE = 40; // entries per chunk
+const CHUNK_SIZE = 40;
+
+// Detect whether Claude's cloud storage is available
+const hasCloudStorage = typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function';
+
+async function storageGet(key) {
+  if (hasCloudStorage) {
+    try {
+      const result = await window.storage.get(key);
+      return result && result.value ? result.value : null;
+    } catch(e) { return null; }
+  } else {
+    return localStorage.getItem(key);
+  }
+}
+
+async function storageSet(key, value) {
+  if (hasCloudStorage) {
+    await window.storage.set(key, value);
+  } else {
+    localStorage.setItem(key, value);
+  }
+}
 
 async function loadEntries() {
-  // Try single key first (legacy)
+  // Try single key first
   try {
-    const result = await window.storage.get(STORAGE_KEY);
-    if (result && result.value) {
-      const parsed = JSON.parse(result.value);
+    const val = await storageGet(STORAGE_KEY);
+    if (val) {
+      const parsed = JSON.parse(val);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch(e) {}
 
-  // Try chunked keys
-  try {
-    const meta = await window.storage.get(STORAGE_KEY + '_meta');
-    if (meta && meta.value) {
-      const { chunks } = JSON.parse(meta.value);
-      let all = [];
-      for (let i = 0; i < chunks; i++) {
-        const chunk = await window.storage.get(STORAGE_KEY + '_chunk_' + i);
-        if (chunk && chunk.value) all = all.concat(JSON.parse(chunk.value));
+  // Try chunked keys (cloud only, for large libraries)
+  if (hasCloudStorage) {
+    try {
+      const metaVal = await storageGet(STORAGE_KEY + '_meta');
+      if (metaVal) {
+        const { chunks } = JSON.parse(metaVal);
+        let all = [];
+        for (let i = 0; i < chunks; i++) {
+          const chunkVal = await storageGet(STORAGE_KEY + '_chunk_' + i);
+          if (chunkVal) all = all.concat(JSON.parse(chunkVal));
+        }
+        if (all.length > 0) return all;
       }
-      return all;
-    }
-  } catch(e) {}
+    } catch(e) {}
+  }
 
   return [];
 }
 
 async function saveEntries(data) {
-  const chunks = [];
-  for (let i = 0; i < data.length; i += CHUNK_SIZE) {
-    chunks.push(data.slice(i, i + CHUNK_SIZE));
+  if (hasCloudStorage && data.length > CHUNK_SIZE) {
+    // Chunked save for large libraries in cloud storage
+    const chunks = [];
+    for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+      chunks.push(data.slice(i, i + CHUNK_SIZE));
+    }
+    for (let i = 0; i < chunks.length; i++) {
+      await storageSet(STORAGE_KEY + '_chunk_' + i, JSON.stringify(chunks[i]));
+    }
+    await storageSet(STORAGE_KEY + '_meta', JSON.stringify({ chunks: chunks.length, total: data.length }));
+    // Also save to single key as fallback (best effort)
+    try { await storageSet(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  } else {
+    // Single key save (localStorage or small cloud library)
+    await storageSet(STORAGE_KEY, JSON.stringify(data));
   }
-
-  // Save each chunk
-  for (let i = 0; i < chunks.length; i++) {
-    await window.storage.set(STORAGE_KEY + '_chunk_' + i, JSON.stringify(chunks[i]));
-  }
-  // Save meta
-  await window.storage.set(STORAGE_KEY + '_meta', JSON.stringify({ chunks: chunks.length, total: data.length }));
-
-  // Also try saving to legacy key for backward compat (may fail if too large — that's ok)
-  try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(data));
-  } catch(e) {}
 }
 
 let entries = [];
@@ -1351,10 +1402,10 @@ async function init() {
   setSyncState('syncing', 'Loading…');
   try {
     entries = await loadEntries();
-    setSyncState('saved', 'Synced');
+    setSyncState('saved', hasCloudStorage ? 'Cloud synced' : 'Loaded locally');
   } catch (e) {
     entries = [];
-    setSyncState('idle', 'Cloud ready');
+    setSyncState('idle', hasCloudStorage ? 'Cloud ready' : 'Local ready');
   }
   isLoading = false;
   render();
@@ -1365,7 +1416,7 @@ async function persistEntries() {
   try {
     await saveEntries(entries);
     setSyncState('saved', 'Saved ✓');
-    setTimeout(() => setSyncState('idle', 'Synced'), 2000);
+    setTimeout(() => setSyncState('idle', hasCloudStorage ? 'Cloud synced' : 'Saved locally'), 2000);
   } catch (e) {
     setSyncState('idle', 'Save failed');
     console.error('Storage error:', e);
