@@ -10,27 +10,27 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --c-bg: #171310;
-  --c-bg2: #1f1a16;
-  --c-bg3: #2a2219;
-  --c-bg4: #342b22;
-  --c-border: #40342d;
-  --c-border2: #4e3f37;
-  --c-text: #ede4d8;
-  --c-text2: #b8a494;
-  --c-text3: #7a6858;
-  --c-gold: #c8963a;
-  --c-gold2: #deb060;
-  --c-red: #b84030;
-  --c-book: #5a9fd4;
-  --c-book-bg: rgba(90,159,212,0.13);
-  --c-fic: #a882d8;
-  --c-fic-bg: rgba(168,130,216,0.13);
-  --c-reading: #5abf85;
-  --c-reading-bg: rgba(90,191,133,0.13);
-  --c-want: #c8963a;
-  --c-want-bg: rgba(200,150,58,0.13);
-  --c-done-bg: rgba(255,255,255,0.06);
+  --c-bg: #151618;
+  --c-bg2: #22262a;
+  --c-bg3: #2c3035;
+  --c-bg4: #363c42;
+  --c-border: #3e454c;
+  --c-border2: #4e5760;
+  --c-text: #eef0f3;
+  --c-text2: #c8cdd4;
+  --c-text3: #7a8088;
+  --c-gold: #d4a040;
+  --c-gold2: #e8bc65;
+  --c-red: #c04535;
+  --c-book: #6aafde;
+  --c-book-bg: rgba(106,175,222,0.16);
+  --c-fic: #b890e0;
+  --c-fic-bg: rgba(184,144,224,0.16);
+  --c-reading: #6acf90;
+  --c-reading-bg: rgba(106,207,144,0.16);
+  --c-want: #d4a040;
+  --c-want-bg: rgba(212,160,64,0.16);
+  --c-done-bg: rgba(255,255,255,0.08);
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Outfit', system-ui, sans-serif;
   --r: 10px;
@@ -38,6 +38,12 @@
 }
 
 html { scroll-behavior: smooth; }
+
+:root {
+  --header-h: 72px;
+  --subheader-h: 80px;
+  --sticky-top: calc(var(--header-h) + var(--subheader-h));
+}
 
 body {
   font-family: var(--sans);
@@ -59,15 +65,71 @@ body::before {
   opacity: 0.5;
 }
 
-/* ── HEADER ── */
+/* ── UPPER HEADER ── */
 header {
-  background: rgba(22,18,16,0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: none;
-  padding: 0 2rem;
-  position: sticky; top: 0; z-index: 100;
+  background: var(--c-bg2);
+  padding: 0 4.5rem; /* space for pillars */
+  position: sticky; top: 0; z-index: 101;
   display: flex; align-items: center; justify-content: space-between;
-  height: 60px;
+  height: 72px;
+  overflow: hidden;
+}
+
+
+/* Left pillar */
+header::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 52px;
+  background:
+    /* beaded edge strip */
+    repeating-linear-gradient(180deg,
+      rgba(212,160,64,0.5) 0px, rgba(212,160,64,0.5) 3px,
+      rgba(40,55,70,0.2) 3px, rgba(40,55,70,0.2) 6px,
+      rgba(212,160,64,0.5) 6px, rgba(212,160,64,0.5) 9px,
+      transparent 9px, transparent 12px
+    ) left 7px top 0 / 5px 100% no-repeat,
+    /* pillar body */
+    linear-gradient(90deg,
+      rgba(30,40,55,0.6) 0%,
+      rgba(50,65,85,0.4) 20%,
+      rgba(70,90,110,0.25) 55%,
+      rgba(45,60,80,0.4) 80%,
+      rgba(25,35,50,0.5) 100%
+    );
+  pointer-events: none;
+}
+
+/* Right pillar — mirror via transform on a pseudo of a wrapper */
+.header-pillar-right {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 52px;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(212,160,64,0.5) 0px, rgba(212,160,64,0.5) 3px,
+      rgba(40,55,70,0.2) 3px, rgba(40,55,70,0.2) 6px,
+      rgba(212,160,64,0.5) 6px, rgba(212,160,64,0.5) 9px,
+      transparent 9px, transparent 12px
+    ) right 7px top 0 / 5px 100% no-repeat,
+    linear-gradient(90deg,
+      rgba(25,35,50,0.5) 0%,
+      rgba(45,60,80,0.4) 20%,
+      rgba(70,90,110,0.25) 45%,
+      rgba(50,65,85,0.4) 80%,
+      rgba(30,40,55,0.6) 100%
+    );
+}
+
+/* ── SUB-HEADER (search + filters) ── */
+.sub-header {
+  background: var(--c-bg3);
+  padding: 0.6rem 2rem;
+  position: sticky; top: var(--header-h); z-index: 99;
+  display: flex; flex-direction: column; gap: 6px;
+  border-bottom: 1px solid rgba(212,160,64,0.12);
 }
 
 .logo {
@@ -79,13 +141,9 @@ header {
   display: flex; align-items: center; gap: 12px;
 }
 .logo-mark {
-  width: 32px; height: 32px;
-  background: linear-gradient(135deg, var(--c-gold), var(--c-gold2));
-  border-radius: 6px;
+  width: 42px; height: 42px;
+  flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 19px; font-family: var(--serif); font-weight: 600;
-  color: #1a0e04; line-height: 1;
-  box-shadow: 0 4px 12px rgba(200,146,58,0.3);
 }
 .logo em {
   font-style: italic;
@@ -165,30 +223,116 @@ header {
 .layout {
   display: grid;
   grid-template-columns: 220px 1fr;
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - var(--header-h));
+  align-items: start;
 }
 
 /* ── SIDEBAR ── */
 aside {
   background: var(--c-bg2);
-  border-right: none;
-  padding: 1.5rem 1rem;
-  position: sticky; top: 60px;
-  height: calc(100vh - 60px);
+  padding: 1.5rem 1rem 1.5rem 1.2rem;
+  position: sticky; top: var(--header-h);
+  height: calc(100vh - var(--header-h));
   overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
 }
 
-.sidebar-label {
+/* Right pillar on sidebar */
+aside::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 14px;
+  pointer-events: none;
+  background:
+    /* beaded inner edge */
+    repeating-linear-gradient(180deg,
+      rgba(212,160,64,0.45) 0px, rgba(212,160,64,0.45) 2px,
+      transparent 2px, transparent 7px
+    ) left 3px top 0 / 3px 100% no-repeat,
+    /* pillar shading */
+    linear-gradient(90deg,
+      rgba(25,35,50,0.4) 0%,
+      rgba(140,95,40,0.35) 30%,
+      rgba(180,130,60,0.2) 60%,
+      rgba(100,68,28,0.45) 85%,
+      rgba(55,36,14,0.6) 100%
+    );
+}
+
+/* Diamond + circle panel pattern on sidebar using SVG bg */
+aside::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 14px; bottom: 0;
+  width: 1px;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(212,160,64,0.35) 15%,
+    rgba(232,188,101,0.55) 50%,
+    rgba(212,160,64,0.35) 85%,
+    transparent 100%
+  );
+}
+
+/* Panel SVG overlay on the sidebar content area */
+.sidebar-panels {
+  position: absolute;
+  top: 0; left: 0; right: 14px; bottom: 0;
+  pointer-events: none;
+  background-image:
+    /* diamond motifs */
+    repeating-linear-gradient(
+      135deg,
+      transparent 0px, transparent 18px,
+      rgba(212,160,64,0.06) 18px, rgba(212,160,64,0.06) 19px,
+      transparent 19px, transparent 38px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent 0px, transparent 18px,
+      rgba(212,160,64,0.06) 18px, rgba(212,160,64,0.06) 19px,
+      transparent 19px, transparent 38px
+    );
+}
+
+main { padding-bottom: 2rem; }
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--c-text3);
-  padding: 0 8px;
+  padding: 0 4px;
   margin-bottom: 6px;
-  margin-top: 1.5rem;
+  margin-top: 0;
 }
-.sidebar-label:first-child { margin-top: 0; }
+
+/* Routed/recessed panel sections */
+.sidebar-section {
+  margin-bottom: 1rem;
+  background: var(--c-bg);
+  border-radius: 6px;
+  padding: 10px 8px;
+  /* Inset shadow = recessed panel; outer highlight = raised lip */
+  box-shadow:
+    inset 2px 2px 6px rgba(0,0,0,0.6),
+    inset -1px -1px 3px rgba(0,0,0,0.35),
+    0 1px 0 rgba(180,200,220,0.08),
+    1px 0 0 rgba(180,200,220,0.05),
+    -1px 0 0 rgba(180,200,220,0.05);
+}
+.sidebar-section-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(212,160,64,0.6);
+  padding: 0 4px;
+  margin-bottom: 6px;
+  display: block;
+}
 
 .nav-item {
   display: flex; align-items: center; gap: 9px;
@@ -214,11 +358,17 @@ aside {
 .nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
 .stats-box {
-  margin-top: 0.5rem;
-  background: var(--c-bg3);
-  border-radius: var(--r);
+  margin-top: 0;
+  background: var(--c-bg);
+  border-radius: 6px;
   padding: 12px;
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  box-shadow:
+    inset 2px 2px 6px rgba(0,0,0,0.6),
+    inset -1px -1px 3px rgba(0,0,0,0.35),
+    0 1px 0 rgba(180,200,220,0.08),
+    1px 0 0 rgba(180,200,220,0.05),
+    -1px 0 0 rgba(180,200,220,0.05);
 }
 .stat-item { }
 .stat-num {
@@ -333,7 +483,6 @@ main { padding: 2rem; overflow: hidden; }
 /* ── CARD ── */
 .card {
   background: var(--c-bg2);
-  border: none;
   border-radius: var(--r-lg);
   padding: 18px;
   display: flex; flex-direction: column; gap: 10px;
@@ -350,20 +499,19 @@ main { padding: 2rem; overflow: hidden; }
   pointer-events: none;
 }
 .card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.35); transform: translateY(-2px); }
-.card[data-type="book"] { background: linear-gradient(180deg, rgba(74,139,196,0.08) 0%, var(--c-bg2) 60px); }
-.card[data-type="fic"] { background: linear-gradient(180deg, rgba(155,114,207,0.08) 0%, var(--c-bg2) 60px); }
+.card[data-type="book"] { border-left: 4px solid rgba(106,175,222,0.6); }
+.card[data-type="fic"] { border-left: 4px solid rgba(184,144,224,0.6); }
 
 .list-view .card {
-  flex-direction: row; align-items: center;
-  padding: 16px 20px; gap: 16px;
+  flex-direction: column;
+  padding: 18px 22px; gap: 10px;
   transform: none !important;
-  border-left: 3px solid transparent;
+  border-left: 4px solid transparent;
 }
-.list-view .card[data-type="book"] { border-left-color: rgba(74,139,196,0.5); background: none; }
-.list-view .card[data-type="fic"] { border-left-color: rgba(155,114,207,0.5); background: none; }
+.list-view .card[data-type="book"] { border-left-color: rgba(106,175,222,0.6); background: var(--c-bg2); }
+.list-view .card[data-type="fic"] { border-left-color: rgba(184,144,224,0.6); background: var(--c-bg2); }
 .list-view .card-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
 .list-view .card-meta { border-top: none; padding-top: 0; margin-top: 0; }
-.list-view .card-notes { display: none; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(10px); }
@@ -777,6 +925,83 @@ main { padding: 2rem; overflow: hidden; }
   padding-top: 1rem; margin-top: 0.5rem;
 }
 
+/* ── PAIRINGS & ADDITIONAL TAGS ── */
+.card-pairings {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.pairing-tag {
+  font-size: 13px;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--c-fic);
+  background: var(--c-fic-bg);
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+.card-addl-tags {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.addl-tag {
+  font-size: 12px;
+  color: var(--c-text2);
+  background: var(--c-bg3);
+  padding: 2px 9px;
+  border-radius: 4px;
+}
+.addl-tag.addl-more {
+  color: var(--c-text3);
+  font-style: italic;
+}
+
+/* ── MULTISELECT ── */
+.card {
+  cursor: default;
+  user-select: none;
+}
+.card.selected {
+  outline: 2px solid var(--c-gold);
+  outline-offset: -2px;
+}
+.card-checkbox {
+  display: none;
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  background: var(--c-bg4);
+  align-items: center; justify-content: center;
+  flex-shrink: 0; cursor: pointer;
+  color: var(--c-gold); font-size: 12px;
+}
+.select-mode .card-checkbox { display: flex; }
+
+.bulk-bar {
+  display: none;
+  align-items: center; gap: 10px;
+  padding: 8px 2rem;
+  background: var(--c-bg4);
+  position: sticky; top: var(--header-h); z-index: 98;
+}
+.bulk-bar.visible { display: flex; }
+.bulk-count { font-size: 15px; color: var(--c-text2); flex: 1; }
+.bulk-btn {
+  padding: 6px 14px; border-radius: 7px; border: none;
+  background: var(--c-bg3); color: var(--c-text2);
+  font-family: var(--sans); font-size: 14px; cursor: pointer;
+  transition: all 0.12s;
+}
+.bulk-btn:hover { background: var(--c-bg4); color: var(--c-text); }
+.bulk-btn.danger:hover { background: rgba(192,69,53,0.2); color: var(--c-red); }
+.bulk-btn.reading { color: var(--c-reading); }
+.bulk-btn.want { color: var(--c-want); }
+.bulk-btn.read { color: var(--c-text2); }
+.btn-select-mode {
+  background: transparent; border: none;
+  color: var(--c-text3); font-family: var(--sans); font-size: 14px;
+  cursor: pointer; padding: 6px 10px; border-radius: 7px;
+  transition: all 0.12s;
+}
+.btn-select-mode:hover { background: var(--c-bg3); color: var(--c-text2); }
+.btn-select-mode.active { background: var(--c-bg3); color: var(--c-gold); }
+
 /* ── MOBILE ── */
 @media (max-width: 680px) {
   .layout { grid-template-columns: 1fr; }
@@ -793,8 +1018,35 @@ main { padding: 2rem; overflow: hidden; }
 <body>
 
 <header>
+  <div class="header-pillar-right"></div>
   <div class="logo">
-    <div class="logo-mark">§</div>
+    <div class="logo-mark">
+      <svg viewBox="0 0 42 42" width="42" height="42" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#d4a040"/>
+            <stop offset="100%" style="stop-color:#e8bc65"/>
+          </linearGradient>
+        </defs>
+        <!-- Outer square frame -->
+        <rect x="2" y="2" width="38" height="38" rx="2" fill="none" stroke="url(#gold-grad)" stroke-width="0.8" opacity="0.8"/>
+        <!-- Inner square frame -->
+        <rect x="5" y="5" width="32" height="32" rx="1" fill="none" stroke="url(#gold-grad)" stroke-width="0.4" opacity="0.5"/>
+        <!-- Corner ornaments — small diamonds at each corner -->
+        <path d="M2,2 L5,4 L2,6 L-1,4 Z" fill="#d4a040" opacity="0" />
+        <rect x="0.5" y="0.5" width="3" height="3" rx="0.5" fill="#d4a040" opacity="0.7" transform="rotate(45 2 2)"/>
+        <rect x="36.5" y="0.5" width="3" height="3" rx="0.5" fill="#d4a040" opacity="0.7" transform="rotate(45 38 2)"/>
+        <rect x="0.5" y="36.5" width="3" height="3" rx="0.5" fill="#d4a040" opacity="0.7" transform="rotate(45 2 38)"/>
+        <rect x="36.5" y="36.5" width="3" height="3" rx="0.5" fill="#d4a040" opacity="0.7" transform="rotate(45 38 38)"/>
+        <!-- Mid-edge tick marks -->
+        <line x1="21" y1="2" x2="21" y2="5.5" stroke="#d4a040" stroke-width="0.8" opacity="0.6"/>
+        <line x1="21" y1="36.5" x2="21" y2="40" stroke="#d4a040" stroke-width="0.8" opacity="0.6"/>
+        <line x1="2" y1="21" x2="5.5" y2="21" stroke="#d4a040" stroke-width="0.8" opacity="0.6"/>
+        <line x1="36.5" y1="21" x2="40" y2="21" stroke="#d4a040" stroke-width="0.8" opacity="0.6"/>
+        <!-- Centred L -->
+        <text x="21" y="29" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="22" font-weight="500" fill="url(#gold-grad)">L</text>
+      </svg>
+    </div>
     The <em>Library</em>
   </div>
   <div class="header-right">
@@ -813,81 +1065,105 @@ main { padding: 2rem; overflow: hidden; }
   </div>
 </header>
 
+
 <div class="layout">
   <aside>
-    <div class="sidebar-label">Browse</div>
-    <button class="nav-item active" onclick="setFilter('all',this)">
-      <span style="font-size:13px">◈</span> All entries <span class="count" id="cnt-all">—</span>
-    </button>
-    <button class="nav-item" onclick="setFilter('book',this)">
-      <span class="nav-dot" style="background:var(--c-book)"></span> Books <span class="count" id="cnt-book">—</span>
-    </button>
-    <button class="nav-item" onclick="setFilter('fic',this)">
-      <span class="nav-dot" style="background:var(--c-fic)"></span> Fanfiction <span class="count" id="cnt-fic">—</span>
-    </button>
+    <div class="sidebar-panels"></div>
 
-    <div class="sidebar-label">Status</div>
-    <button class="nav-item" onclick="setFilter('reading',this)">
-      <span class="nav-dot" style="background:var(--c-reading)"></span> Reading now <span class="count" id="cnt-reading">—</span>
-    </button>
-    <button class="nav-item" onclick="setFilter('want',this)">
-      <span class="nav-dot" style="background:var(--c-want)"></span> Want to read <span class="count" id="cnt-want">—</span>
-    </button>
-    <button class="nav-item" onclick="setFilter('read',this)">
-      <span class="nav-dot" style="background:var(--c-text3)"></span> Finished <span class="count" id="cnt-read">—</span>
-    </button>
+    <div class="sidebar-section">
+      <span class="sidebar-section-label">Browse</span>
+      <button class="nav-item active" onclick="setFilter('all',this)">
+        <span style="font-size:13px">◈</span> All entries <span class="count" id="cnt-all">—</span>
+      </button>
+      <button class="nav-item" onclick="setFilter('book',this)">
+        <span class="nav-dot" style="background:var(--c-book)"></span> Books <span class="count" id="cnt-book">—</span>
+      </button>
+      <button class="nav-item" onclick="setFilter('fic',this)">
+        <span class="nav-dot" style="background:var(--c-fic)"></span> Fanfiction <span class="count" id="cnt-fic">—</span>
+      </button>
+    </div>
 
-    <div class="sidebar-label">Stats</div>
-    <div class="stats-box">
-      <div class="stat-item">
-        <div class="stat-num" id="stat-total">—</div>
-        <div class="stat-lbl">Total</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num" id="stat-finished">—</div>
-        <div class="stat-lbl">Finished</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num" id="stat-avg">—</div>
-        <div class="stat-lbl">Avg rating</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num" id="stat-fandoms">—</div>
-        <div class="stat-lbl">Fandoms</div>
+    <div class="sidebar-section">
+      <span class="sidebar-section-label">Status</span>
+      <button class="nav-item" onclick="setFilter('reading',this)">
+        <span class="nav-dot" style="background:var(--c-reading)"></span> Reading now <span class="count" id="cnt-reading">—</span>
+      </button>
+      <button class="nav-item" onclick="setFilter('want',this)">
+        <span class="nav-dot" style="background:var(--c-want)"></span> Want to read <span class="count" id="cnt-want">—</span>
+      </button>
+      <button class="nav-item" onclick="setFilter('read',this)">
+        <span class="nav-dot" style="background:var(--c-text3)"></span> Finished <span class="count" id="cnt-read">—</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <span class="sidebar-section-label">Stats</span>
+      <div class="stats-box">
+        <div class="stat-item">
+          <div class="stat-num" id="stat-total">—</div>
+          <div class="stat-lbl">Total</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="stat-finished">—</div>
+          <div class="stat-lbl">Finished</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="stat-avg">—</div>
+          <div class="stat-lbl">Avg rating</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="stat-fandoms">—</div>
+          <div class="stat-lbl">Fandoms</div>
+        </div>
       </div>
     </div>
   </aside>
 
   <main>
-    <div class="top-bar">
-      <div class="search-wrap">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="9" cy="9" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/>
-        </svg>
-        <input id="search" type="text" placeholder="Search title, author, fandom, notes…" oninput="render()" />
+    <!-- Bulk action bar -->
+    <div class="bulk-bar" id="bulk-bar">
+      <span class="bulk-count" id="bulk-count">0 selected</span>
+      <button class="bulk-btn reading" onclick="bulkMove('reading')">● Reading</button>
+      <button class="bulk-btn want" onclick="bulkMove('want')">◯ Want to read</button>
+      <button class="bulk-btn read" onclick="bulkMove('read')">✓ Finished</button>
+      <button class="bulk-btn danger" onclick="bulkDelete()">✕ Delete</button>
+      <button class="bulk-btn" onclick="clearSelection()">Cancel</button>
+    </div>
+
+    <!-- Sub-header: search + filters -->
+    <div class="sub-header">
+      <div class="top-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="9" cy="9" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/>
+          </svg>
+          <input id="search" type="text" placeholder="Search title, author, fandom, notes…" oninput="render()" />
+        </div>
+        <div class="sort-wrap">
+          <span class="sort-label">Sort:</span>
+          <select class="sort-select" id="sort-select" onchange="render()">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="title">A–Z</option>
+            <option value="rating">Rating</option>
+          </select>
+        </div>
+        <button class="btn-select-mode" id="btn-select-mode" onclick="toggleSelectMode()" title="Select entries">
+          ◻ Select
+        </button>
       </div>
-      <div class="sort-wrap">
-        <span class="sort-label">Sort:</span>
-        <select class="sort-select" id="sort-select" onchange="render()">
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="title">A–Z</option>
-          <option value="rating">Rating</option>
-        </select>
+      <div class="filter-row">
+        <button class="chip active-all" data-chip="all" onclick="setChip('all',this)">All</button>
+        <button class="chip" data-chip="book" onclick="setChip('book',this)">⊞ Books</button>
+        <button class="chip" data-chip="fic" onclick="setChip('fic',this)">❧ Fanfic</button>
+        <button class="chip" data-chip="reading" onclick="setChip('reading',this)">● Reading</button>
+        <button class="chip" data-chip="want" onclick="setChip('want',this)">◯ Want</button>
+        <button class="chip" data-chip="read" onclick="setChip('read',this)">✓ Finished</button>
+        <span class="result-count" id="result-count"></span>
       </div>
     </div>
 
-    <div class="filter-row">
-      <button class="chip active-all" data-chip="all" onclick="setChip('all',this)">All</button>
-      <button class="chip" data-chip="book" onclick="setChip('book',this)">⊞ Books</button>
-      <button class="chip" data-chip="fic" onclick="setChip('fic',this)">❧ Fanfic</button>
-      <button class="chip" data-chip="reading" onclick="setChip('reading',this)">● Reading</button>
-      <button class="chip" data-chip="want" onclick="setChip('want',this)">◯ Want</button>
-      <button class="chip" data-chip="read" onclick="setChip('read',this)">✓ Finished</button>
-      <span class="result-count" id="result-count"></span>
-    </div>
-
-    <div class="entries-grid" id="entries-grid">
+    <div class="entries-grid list-view" id="entries-grid">
       <div class="loading-state">Loading your shelf…</div>
     </div>
   </main>
@@ -1012,8 +1288,55 @@ main { padding: 2rem; overflow: hidden; }
 <div class="version-tag" id="version-tag"></div>
 
 <script>
-// ── Storage helpers using window.storage (cross-device cloud) ──
+// ── Storage helpers — chunked to handle large libraries ──
 const STORAGE_KEY = 'readshelf_entries_v3';
+const CHUNK_SIZE = 40; // entries per chunk
+
+async function loadEntries() {
+  // Try single key first (legacy)
+  try {
+    const result = await window.storage.get(STORAGE_KEY);
+    if (result && result.value) {
+      const parsed = JSON.parse(result.value);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch(e) {}
+
+  // Try chunked keys
+  try {
+    const meta = await window.storage.get(STORAGE_KEY + '_meta');
+    if (meta && meta.value) {
+      const { chunks } = JSON.parse(meta.value);
+      let all = [];
+      for (let i = 0; i < chunks; i++) {
+        const chunk = await window.storage.get(STORAGE_KEY + '_chunk_' + i);
+        if (chunk && chunk.value) all = all.concat(JSON.parse(chunk.value));
+      }
+      return all;
+    }
+  } catch(e) {}
+
+  return [];
+}
+
+async function saveEntries(data) {
+  const chunks = [];
+  for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+    chunks.push(data.slice(i, i + CHUNK_SIZE));
+  }
+
+  // Save each chunk
+  for (let i = 0; i < chunks.length; i++) {
+    await window.storage.set(STORAGE_KEY + '_chunk_' + i, JSON.stringify(chunks[i]));
+  }
+  // Save meta
+  await window.storage.set(STORAGE_KEY + '_meta', JSON.stringify({ chunks: chunks.length, total: data.length }));
+
+  // Also try saving to legacy key for backward compat (may fail if too large — that's ok)
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) {}
+}
 
 let entries = [];
 let activeFilter = 'all';
@@ -1027,15 +1350,9 @@ let isLoading = true;
 async function init() {
   setSyncState('syncing', 'Loading…');
   try {
-    const result = await window.storage.get(STORAGE_KEY);
-    if (result && result.value) {
-      entries = JSON.parse(result.value);
-    } else {
-      entries = [];
-    }
+    entries = await loadEntries();
     setSyncState('saved', 'Synced');
   } catch (e) {
-    // Key doesn't exist yet — fresh start
     entries = [];
     setSyncState('idle', 'Cloud ready');
   }
@@ -1046,7 +1363,7 @@ async function init() {
 async function persistEntries() {
   setSyncState('syncing', 'Saving…');
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(entries));
+    await saveEntries(entries);
     setSyncState('saved', 'Saved ✓');
     setTimeout(() => setSyncState('idle', 'Synced'), 2000);
   } catch (e) {
@@ -1503,35 +1820,10 @@ function render() {
       ? `<a href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer">${safeTitle}</a>`
       : safeTitle;
 
-    const isListView = currentView === 'list';
-    if (isListView) {
-      return `<div class="card" data-type="${e.type}" data-id="${e.id}">
-        <div class="card-body">
-          <div class="card-header" style="margin-bottom:0">
-            <div class="card-title" style="font-size:15px">${titleHtml}</div>
-            <div class="card-actions">
-              <button class="icon-btn" onclick="openModal(${e.id})" title="Edit">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11.5 2.5l2 2-9 9H2.5v-2l9-9z"/></svg>
-              </button>
-              <button class="icon-btn del" onclick="deleteEntry(${e.id})" title="Remove">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,4 13,4"/><path d="M5 4V3h6v1M6 7v5M10 7v5"/><path d="M4 4l1 9h6l1-9"/></svg>
-              </button>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
-            ${e.author ? `<span class="card-author">by ${escHtml(e.author)}</span>` : ''}
-            ${e.fandom ? `<span class="card-fandom">· ${escHtml(e.fandom)}</span>` : ''}
-            <span class="tag tag-${e.type}" style="font-size:10px">${e.type === 'book' ? '⊞' : '❧'} ${e.type === 'book' ? 'Book' : 'Fanfic'}</span>
-            ${statusTag(e.status)}
-            ${e.rating ? starsHtml(e.rating) : ''}
-            ${e.url ? `<a class="card-link" href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer">Read online <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h6v6"/><line x1="2" y1="8" x2="8" y2="2"/></svg></a>` : ''}
-          </div>
-        </div>
-      </div>`;
-    }
-
-    return `<div class="card" data-type="${e.type}" data-id="${e.id}">
+    // Single unified card layout — full details always shown
+    return `<div class="card${selectedIds.has(e.id) ? ' selected' : ''}" data-type="${e.type}" data-id="${e.id}" onclick="if(selectMode) toggleSelect(${e.id})">
       <div class="card-header">
+        <div class="card-checkbox" onclick="event.stopPropagation(); toggleSelect(${e.id})">${selectedIds.has(e.id) ? '✓' : ''}</div>
         <div class="card-title">${titleHtml}</div>
         <div class="card-actions">
           <button class="icon-btn" onclick="openModal(${e.id})" title="Edit">
@@ -1550,11 +1842,23 @@ function render() {
         <span class="tag tag-${e.type}">${e.type === 'book' ? '⊞ Book' : '❧ Fanfic'}</span>
         ${statusTag(e.status)}
         ${e.rating ? starsHtml(e.rating) : ''}
+        ${e.length ? `<span class="tag tag-read">${escHtml(e.length)}</span>` : ''}
+        ${e.ao3Data && e.ao3Data.ao3Rating ? `<span class="tag ao3-tag rating">${escHtml(e.ao3Data.ao3Rating)}</span>` : ''}
+        ${e.ao3Data ? (e.ao3Data.categories||[]).map(c => `<span class="tag ao3-tag category">${escHtml(c)}</span>`).join('') : ''}
+        ${e.ao3Data ? (e.ao3Data.warnings||[]).map(w => `<span class="tag ao3-tag warning">${escHtml(w)}</span>`).join('') : ''}
       </div>
-      ${ao3MetaHtml(e.ao3Data)}
+      ${e.ao3Data && (e.ao3Data.relationships||[]).length ? `
+        <div class="card-pairings">
+          ${e.ao3Data.relationships.map(r => `<span class="pairing-tag">${escHtml(r)}</span>`).join('')}
+        </div>` : ''}
+      ${e.ao3Data && (e.ao3Data.addlTags||[]).length ? `
+        <div class="card-addl-tags">
+          ${e.ao3Data.addlTags.slice(0,12).map(t => `<span class="addl-tag">${escHtml(t)}</span>`).join('')}
+          ${e.ao3Data.addlTags.length > 12 ? `<span class="addl-tag addl-more">+${e.ao3Data.addlTags.length - 12} more</span>` : ''}
+        </div>` : ''}
       ${e.notes ? `<div class="card-notes">${escHtml(e.notes)}</div>` : ''}
       <div class="card-meta">
-        <span>${escHtml(e.length || '')} ${e.date ? `<span class="card-date">· ${fmtDate(e.date)}</span>` : ''}</span>
+        <span>${e.date ? `<span class="card-date">${fmtDate(e.date)}</span>` : ''}</span>
         ${e.url ? `<a class="card-link" href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer">Read online <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h6v6"/><line x1="2" y1="8" x2="8" y2="2"/></svg></a>` : ''}
       </div>
     </div>`;
@@ -1636,9 +1940,73 @@ async function importBookmarks() {
 // ── Version name ──
 document.getElementById('version-tag').textContent = 'Palimpsest';
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+// ── Multiselect ──
+let selectMode = false;
+let selectedIds = new Set();
 
-// ── Drag & Drop / Paste AO3 links ──
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedIds.clear();
+  document.getElementById('btn-select-mode').classList.toggle('active', selectMode);
+  document.getElementById('btn-select-mode').textContent = selectMode ? '✕ Cancel' : '◻ Select';
+  document.getElementById('entries-grid').classList.toggle('select-mode', selectMode);
+  updateBulkBar();
+  render();
+}
+
+function clearSelection() {
+  selectMode = false;
+  selectedIds.clear();
+  document.getElementById('btn-select-mode').classList.remove('active');
+  document.getElementById('btn-select-mode').textContent = '◻ Select';
+  document.getElementById('entries-grid').classList.remove('select-mode');
+  updateBulkBar();
+  render();
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  updateBulkBar();
+  const card = document.querySelector(`.card[data-id="${id}"]`);
+  if (card) {
+    card.classList.toggle('selected', selectedIds.has(id));
+    const cb = card.querySelector('.card-checkbox');
+    if (cb) cb.textContent = selectedIds.has(id) ? '✓' : '';
+  }
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  document.getElementById('bulk-count').textContent = `${selectedIds.size} selected`;
+  bar.classList.toggle('visible', selectMode && selectedIds.size > 0);
+}
+
+async function bulkMove(status) {
+  if (!selectedIds.size) return;
+  const labels = { reading: 'Reading', want: 'Want to read', read: 'Finished' };
+  entries.forEach(e => { if (selectedIds.has(e.id)) e.status = status; });
+  toast(`Moved ${selectedIds.size} entr${selectedIds.size !== 1 ? 'ies' : 'y'} to ${labels[status]}`, '✓');
+  clearSelection();
+  render();
+  await persistEntries();
+}
+
+async function bulkDelete() {
+  if (!selectedIds.size) return;
+  if (!confirm(`Delete ${selectedIds.size} entr${selectedIds.size !== 1 ? 'ies' : 'y'}?`)) return;
+  entries = entries.filter(e => !selectedIds.has(e.id));
+  toast(`Deleted ${selectedIds.size} entr${selectedIds.size !== 1 ? 'ies' : 'y'}`, '✕');
+  clearSelection();
+  render();
+  await persistEntries();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); if (selectMode) clearSelection(); }
+});
+
+init();
 function isAO3Url(str) {
   return /archiveofourown\.org\/works\/\d+/.test(str);
 }
@@ -1697,7 +2065,6 @@ document.addEventListener('drop', async e => {
   }
 });
 
-init();
 </script>
 </body>
 </html>
