@@ -604,11 +604,24 @@ aside::before {
 }
 .card-author { font-size: 18px; color: var(--c-text2); }
 .card-fandom {
-  font-size: 19px;
-  color: var(--c-text3);
+  font-size: 17px;
+  color: var(--c-text2);
   font-style: italic;
   font-family: var(--serif);
+  display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
 }
+.fandom-chip {
+  display: inline-block;
+  background: rgba(106,175,222,0.12);
+  color: var(--c-book);
+  padding: 1px 10px;
+  border-radius: 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: opacity 0.12s;
+  font-style: italic;
+}
+.fandom-chip:hover { opacity: 0.75; }
 
 .card-tags { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 .tag {
@@ -907,13 +920,16 @@ aside::before {
 .footer-date { color: var(--c-text3); font-size: 12px; }
 .footer-stars { display: inline-flex; align-items: center; line-height: 1; }
 .footer-stars .stars { font-size: 13px; letter-spacing: 0.5px; }
-.ao3-tag.warning  { background: rgba(100,115,130,0.18); color: rgba(160,180,200,0.85); }
-.ao3-tag.category { background: rgba(100,115,130,0.18); color: rgba(160,180,200,0.85); }
-.ao3-tag.rating   { background: rgba(100,115,130,0.18); color: rgba(160,180,200,0.85); }
+.ao3-tag.warning  { background: rgba(180,140,80,0.2); color: #d4b070; }
+.ao3-tag.category { background: rgba(130,160,200,0.18); color: #90b8e0; }
+.ao3-tag.rating   { background: rgba(160,130,200,0.18); color: #b090d8; }
 .ao3-tag.fandom   { background: var(--c-book-bg); color: var(--c-book); }
 
 /* ── CARD BADGES (rating/categories/warnings unified row) ── */
 .card-badges { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+
+/* ── CARD PAIRINGS (own row, below badges, above addl tags) ── */
+.card-pairings { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 
 /* ── DROP OVERLAY ── */
 .drop-overlay {
@@ -1959,11 +1975,18 @@ function render() {
     const rawWarnings = e.ao3Data ? (e.ao3Data.warnings||[]) : [];
     const warnings = [...new Set(rawWarnings.map(w => w.trim()))];
 
-    // All fandoms — merge e.fandom + ao3Data.fandoms, deduplicated, shown as text only
-    const allFandoms = [...new Set([
-      ...(e.fandom ? [e.fandom] : []),
-      ...(e.ao3Data ? (e.ao3Data.fandoms||[]) : [])
-    ].map(f => f.trim()).filter(Boolean))];
+    // All fandoms — split comma-separated e.fandom, merge with ao3Data.fandoms,
+    // deduplicate case-insensitively, preserve original casing of first occurrence
+    const fandomSeen = new Map();
+    const fandomSources = [
+      ...(e.fandom ? e.fandom.split(',').map(f => f.trim()).filter(Boolean) : []),
+      ...(e.ao3Data ? (e.ao3Data.fandoms||[]).map(f => f.trim()).filter(Boolean) : [])
+    ];
+    fandomSources.forEach(f => {
+      const key = f.toLowerCase();
+      if (!fandomSeen.has(key)) fandomSeen.set(key, f);
+    });
+    const allFandoms = [...fandomSeen.values()];
 
     // Badges: rating + categories + warnings — all same colour, shown together
     const hasBadges = e.ao3Data && (e.ao3Data.ao3Rating || (e.ao3Data.categories||[]).length || warnings.length);
@@ -1983,7 +2006,7 @@ function render() {
       </div>
       <div class="card-sub">
         ${e.author ? `<div class="card-author">by ${escHtml(e.author)}</div>` : ''}
-        ${allFandoms.length ? `<div class="card-fandom">${allFandoms.map(f => `<span style="cursor:pointer" ${tagClick('fandom', f)}>${escHtml(f)}</span>`).join('<span style="opacity:0.35;margin:0 3px">·</span>')}</div>` : ''}
+        ${allFandoms.length ? `<div class="card-fandom">${allFandoms.map(f => `<span class="fandom-chip" ${tagClick('fandom', f)}>${escHtml(f)}</span>`).join('')}</div>` : ''}
       </div>
       ${hasBadges ? `
       <div class="card-badges">
@@ -1991,14 +2014,14 @@ function render() {
         ${(e.ao3Data.categories||[]).map(c => `<span class="tag ao3-tag category" ${tagClick('category', c)}>${escHtml(c)}</span>`).join('')}
         ${warnings.map(w => `<span class="tag ao3-tag warning" ${tagClick('warning', w)}>${escHtml(w)}</span>`).join('')}
       </div>` : ''}
+      ${e.ao3Data && (e.ao3Data.relationships||[]).length ? `
+      <div class="card-pairings">
+        ${[...new Set(e.ao3Data.relationships)].map(r => `<span class="pairing-tag" ${tagClick('relationship', r)}>${escHtml(r)}</span>`).join('')}
+      </div>` : ''}
+      ${e.ao3Data && (e.ao3Data.addlTags||[]).length ? `
       <div class="card-tags">
-        ${e.ao3Data && (e.ao3Data.relationships||[]).length
-          ? [...new Set(e.ao3Data.relationships)].map(r => `<span class="pairing-tag" ${tagClick('relationship', r)}>${escHtml(r)}</span>`).join('')
-          : ''}
-        ${e.ao3Data && (e.ao3Data.addlTags||[]).length
-          ? [...new Set(e.ao3Data.addlTags)].map(t => `<span class="addl-tag" ${tagClick('addlTag', t)}>${escHtml(t)}</span>`).join('')
-          : ''}
-      </div>
+        ${[...new Set(e.ao3Data.addlTags)].map(t => `<span class="addl-tag" ${tagClick('addlTag', t)}>${escHtml(t)}</span>`).join('')}
+      </div>` : ''}
       ${e.notes ? `<div class="card-notes">${escHtml(e.notes)}</div>` : ''}
       <div class="card-footer">
         ${e.rating ? `<span class="footer-stars">${starsHtml(e.rating)}</span><span class="footer-sep">·</span>` : ''}
@@ -2085,7 +2108,7 @@ async function importBookmarks() {
 
 // ── Version name ──
 // ── VERSION — update this every single deploy ──
-document.getElementById('version-tag').textContent = 'LeGuin';
+document.getElementById('version-tag').textContent = 'Nabokov';
 
 // ── Tag search ──
 function tagSearch(field, val) {
