@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>The Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet" />
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -32,7 +32,7 @@
   --c-want-bg: rgba(212,160,64,0.16);
   --c-done-bg: rgba(255,255,255,0.08);
   --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'Outfit', system-ui, sans-serif;
+  --sans: 'Cormorant Garamond', Georgia, serif;
   --r: 10px;
   --r-lg: 16px;
 }
@@ -46,11 +46,11 @@ html { scroll-behavior: smooth; }
 }
 
 body {
-  font-family: var(--sans);
+  font-family: var(--serif);
   background: var(--c-bg);
   color: var(--c-text);
   min-height: 100vh;
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1.6;
 }
 
@@ -573,8 +573,8 @@ aside::before {
 }
 .card-title {
   font-family: var(--serif);
-  font-size: 19px;
-  font-weight: 500;
+  font-size: 21px;
+  font-weight: 700;
   color: var(--c-text);
   line-height: 1.25;
   flex: 1;
@@ -887,7 +887,24 @@ aside::before {
   color: var(--c-text2);
   border: none;
 }
-.ao3-tag.warning { background: rgba(184,64,48,0.12); color: #e07060; }
+.ao3-tag.warning { background: rgba(140,120,80,0.15); color: rgba(200,175,110,0.85); }
+
+/* ── CARD FOOTER ── */
+.card-footer {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+}
+.footer-sep { color: var(--c-text3); opacity: 0.4; }
+.footer-tag {
+  color: var(--c-text3);
+  cursor: pointer;
+  transition: color 0.12s;
+}
+.footer-tag:hover { color: var(--c-text2); }
+.footer-date { color: var(--c-text3); font-size: 12px; }
 .ao3-tag.category { background: var(--c-fic-bg); color: var(--c-fic); }
 .ao3-tag.rating { background: rgba(200,150,58,0.12); color: var(--c-gold2); }
 .ao3-tag.fandom { background: var(--c-book-bg); color: var(--c-book); }
@@ -1222,8 +1239,8 @@ aside::before {
       </div>
       <div class="filter-row">
         <button class="chip active-all" data-chip="all" onclick="setChip('all',this)">All</button>
-        <button class="chip" data-chip="book" onclick="setChip('book',this)">⊞ Books</button>
-        <button class="chip" data-chip="fic" onclick="setChip('fic',this)">❧ Fanfic</button>
+        <button class="chip" data-chip="book" onclick="setChip('book',this)">✦ Books</button>
+        <button class="chip" data-chip="fic" onclick="setChip('fic',this)">✶ Fanfic</button>
         <button class="chip" data-chip="reading" onclick="setChip('reading',this)">● Reading</button>
         <button class="chip" data-chip="want" onclick="setChip('want',this)">◯ Want</button>
         <button class="chip" data-chip="read" onclick="setChip('read',this)">✓ Finished</button>
@@ -1246,8 +1263,8 @@ aside::before {
     </div>
     <div class="modal-body">
       <div class="type-toggle">
-        <button class="type-btn active-book" id="btn-book" onclick="setType('book')">⊞ Book</button>
-        <button class="type-btn" id="btn-fic" onclick="setType('fic')">❧ Fanfiction</button>
+        <button class="type-btn active-book" id="btn-book" onclick="setType('book')">✦ Book</button>
+        <button class="type-btn" id="btn-fic" onclick="setType('fic')">✶ Fanfiction</button>
       </div>
 
       <!-- AO3 import (shown only for fanfic) -->
@@ -1932,6 +1949,17 @@ function render() {
 
     const tagClick = (field, val) => `onclick="event.stopPropagation(); tagSearch(${JSON.stringify(field)}, ${JSON.stringify(val)})"`;
 
+    // Deduplicate warnings — some entries have the same warning from both
+    // the import and the AO3 scraper; normalise and unique them
+    const CNTW = 'Creator Chose Not To Use Archive Warnings';
+    const NAWA = 'No Archive Warnings Apply';
+    const rawWarnings = e.ao3Data ? (e.ao3Data.warnings||[]) : [];
+    const warnings = [...new Set(rawWarnings.map(w => w.trim()))];
+
+    // ao3 fandoms — only show if they add info beyond e.fandom
+    const mainFandom = (e.fandom||'').toLowerCase();
+    const ao3Fandoms = e.ao3Data ? (e.ao3Data.fandoms||[]).filter(f => f.toLowerCase() !== mainFandom) : [];
+
     // Single unified card layout — full details always shown
     return `<div class="card${selectedIds.has(e.id) ? ' selected' : ''}" data-type="${e.type}" data-id="${e.id}" onclick="if(selectMode) toggleSelect(${e.id})">
       <div class="card-header">
@@ -1951,26 +1979,27 @@ function render() {
         ${e.fandom ? `<div class="card-fandom" style="cursor:pointer" ${tagClick('fandom', e.fandom)}>${escHtml(e.fandom)}</div>` : ''}
       </div>
       <div class="card-tags">
-        <span class="tag tag-${e.type}" ${tagClick('type', e.type)}>${e.type === 'book' ? '⊞ Book' : '❧ Fanfic'}</span>
-        ${statusTag(e.status)}
         ${e.rating ? starsHtml(e.rating) : ''}
-        ${e.length ? `<span class="tag tag-read">${escHtml(e.length)}</span>` : ''}
         ${e.ao3Data && e.ao3Data.ao3Rating ? `<span class="tag ao3-tag rating" ${tagClick('ao3Rating', e.ao3Data.ao3Rating)}>${escHtml(e.ao3Data.ao3Rating)}</span>` : ''}
         ${e.ao3Data ? (e.ao3Data.categories||[]).map(c => `<span class="tag ao3-tag category" ${tagClick('category', c)}>${escHtml(c)}</span>`).join('') : ''}
-        ${e.ao3Data ? (e.ao3Data.warnings||[]).map(w => `<span class="tag ao3-tag warning" ${tagClick('warning', w)}>${escHtml(w)}</span>`).join('') : ''}
-        ${e.ao3Data ? (e.ao3Data.fandoms||[]).map(f => `<span class="tag ao3-tag fandom" ${tagClick('fandom', f)}>${escHtml(f)}</span>`).join('') : ''}
+        ${warnings.map(w => `<span class="tag ao3-tag warning" ${tagClick('warning', w)}>${escHtml(w)}</span>`).join('')}
+        ${ao3Fandoms.map(f => `<span class="tag ao3-tag fandom" ${tagClick('fandom', f)}>${escHtml(f)}</span>`).join('')}
       </div>
       ${e.ao3Data && (e.ao3Data.relationships||[]).length ? `
         <div class="card-pairings">
-          ${e.ao3Data.relationships.map(r => `<span class="pairing-tag" ${tagClick('relationship', r)}>${escHtml(r)}</span>`).join('')}
+          ${[...new Set(e.ao3Data.relationships)].map(r => `<span class="pairing-tag" ${tagClick('relationship', r)}>${escHtml(r)}</span>`).join('')}
         </div>` : ''}
       ${e.ao3Data && (e.ao3Data.addlTags||[]).length ? `
         <div class="card-addl-tags">
-          ${e.ao3Data.addlTags.map(t => `<span class="addl-tag" ${tagClick('addlTag', t)}>${escHtml(t)}</span>`).join('')}
+          ${[...new Set(e.ao3Data.addlTags)].map(t => `<span class="addl-tag" ${tagClick('addlTag', t)}>${escHtml(t)}</span>`).join('')}
         </div>` : ''}
       ${e.notes ? `<div class="card-notes">${escHtml(e.notes)}</div>` : ''}
-      <div class="card-meta">
-        ${e.date ? `<span class="card-date">${fmtDate(e.date)}</span>` : '<span></span>'}
+      <div class="card-footer">
+        <span class="footer-tag footer-type" ${tagClick('type', e.type)}>${e.type === 'book' ? '✦ Book' : '✶ Fanfic'}</span>
+        <span class="footer-sep">·</span>
+        ${statusTag(e.status)}
+        ${e.length ? `<span class="footer-sep">·</span><span class="footer-tag footer-length">${escHtml(e.length)}</span>` : ''}
+        ${e.date ? `<span class="footer-sep">·</span><span class="footer-date">${fmtDate(e.date)}</span>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -2048,7 +2077,8 @@ async function importBookmarks() {
 }
 
 // ── Version name ──
-document.getElementById('version-tag').textContent = 'Hypatia';
+// ── VERSION — update this every single deploy ──
+document.getElementById('version-tag').textContent = 'Atwood';
 
 // ── Tag search ──
 function tagSearch(field, val) {
