@@ -1137,13 +1137,6 @@ aside::before {
     </div>
 
     <div class="sidebar-section">
-      <span class="sidebar-section-label" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="toggleFandomList()">
-        Fandoms <span id="fandom-toggle-icon" style="opacity:0.5;font-size:12px">▾</span>
-      </span>
-      <div id="fandom-list" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto"></div>
-    </div>
-
-    <div class="sidebar-section">
       <div class="stats-box">
         <div class="stat-item">
           <div class="stat-num" id="stat-total">—</div>
@@ -1157,11 +1150,12 @@ aside::before {
           <div class="stat-num" id="stat-avg">—</div>
           <div class="stat-lbl">Avg rating</div>
         </div>
-        <div class="stat-item">
+        <div class="stat-item" style="cursor:pointer" onclick="toggleFandomList()" title="Click to browse fandoms">
           <div class="stat-num" id="stat-fandoms">—</div>
-          <div class="stat-lbl">Fandoms</div>
+          <div class="stat-lbl" style="display:flex;align-items:center;gap:3px">Fandoms <span id="fandom-toggle-icon" style="font-size:10px;opacity:0.6">▾</span></div>
         </div>
       </div>
+      <div id="fandom-list" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
     </div>
   </aside>
 
@@ -2027,7 +2021,7 @@ async function importBookmarks() {
 }
 
 // ── Version name ──
-document.getElementById('version-tag').textContent = 'Ptolemy';
+document.getElementById('version-tag').textContent = 'Hypatia';
 
 // ── Tag search ──
 function tagSearch(field, val) {
@@ -2047,6 +2041,8 @@ function tagSearch(field, val) {
 let showingFandoms = false;
 function toggleFandomList() {
   showingFandoms = !showingFandoms;
+  const icon = document.getElementById('fandom-toggle-icon');
+  if (icon) icon.textContent = showingFandoms ? '▴' : '▾';
   renderFandomList();
 }
 function renderFandomList() {
