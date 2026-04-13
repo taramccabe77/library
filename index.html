@@ -468,16 +468,16 @@ aside::before {
 
 /* ── FILTER CHIPS ── */
 .filter-row {
-  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
-  margin-bottom: 1.5rem;
+  display: flex; gap: 4px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 0;
 }
-.result-count { font-size: 18px; color: var(--c-text3); margin-left: auto; }
+.result-count { font-size: 13px; color: var(--c-text3); margin-left: auto; }
 
 .chip {
-  padding: 5px 14px;
+  padding: 3px 10px;
   border-radius: 20px;
   border: none;
-  font-size: 19px;
+  font-size: 13px;
   cursor: pointer;
   background: transparent;
   color: var(--c-text2);
@@ -595,16 +595,19 @@ aside::before {
   font-family: var(--serif);
 }
 
-.card-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.card-tags { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 .tag {
   display: inline-flex; align-items: center;
   padding: 2px 9px;
   border-radius: 20px;
-  font-size: 10.5px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.02em;
   border: none;
+  cursor: pointer;
+  transition: opacity 0.12s;
 }
+.tag:hover { opacity: 0.75; }
 .tag-book { background: var(--c-book-bg); color: var(--c-book); }
 .tag-fic { background: var(--c-fic-bg); color: var(--c-fic); }
 .tag-reading { background: var(--c-reading-bg); color: var(--c-reading); }
@@ -621,10 +624,7 @@ aside::before {
   font-family: var(--serif);
   padding-left: 10px; opacity: 0.85;
   line-height: 1.55;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+
 }
 
 .card-meta {
@@ -857,9 +857,15 @@ aside::before {
   margin-top: 2px;
 }
 .ao3-tag {
-  display: inline-block;
-  padding: 1px 7px;
-  border-radius: 3px;
+  display: inline-flex; align-items: center;
+  padding: 2px 9px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.ao3-tag:hover { opacity: 0.75; }
+.ao3-tag-inner {
+  border-radius: 20px;
   font-size: 18px;
   font-family: var(--sans);
   background: var(--c-bg4);
@@ -962,7 +968,7 @@ aside::before {
 
 /* ── PAIRINGS & ADDITIONAL TAGS ── */
 .card-pairings {
-  display: flex; flex-wrap: wrap; gap: 5px;
+  display: flex; flex-wrap: wrap; gap: 4px;
 }
 .pairing-tag {
   font-size: 13px;
@@ -970,22 +976,29 @@ aside::before {
   font-style: italic;
   color: var(--c-fic);
   background: var(--c-fic-bg);
-  padding: 2px 10px;
-  border-radius: 4px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: opacity 0.12s;
 }
+.pairing-tag:hover { opacity: 0.75; }
 .card-addl-tags {
   display: flex; flex-wrap: wrap; gap: 4px;
 }
 .addl-tag {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--c-text2);
   background: var(--c-bg3);
   padding: 2px 9px;
-  border-radius: 4px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: opacity 0.12s;
 }
+.addl-tag:hover { opacity: 0.75; }
 .addl-tag.addl-more {
   color: var(--c-text3);
   font-style: italic;
+  cursor: default;
 }
 
 /* ── MULTISELECT ── */
@@ -1124,7 +1137,13 @@ aside::before {
     </div>
 
     <div class="sidebar-section">
-      <span class="sidebar-section-label">Stats</span>
+      <span class="sidebar-section-label" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="toggleFandomList()">
+        Fandoms <span id="fandom-toggle-icon" style="opacity:0.5;font-size:12px">▾</span>
+      </span>
+      <div id="fandom-list" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto"></div>
+    </div>
+
+    <div class="sidebar-section">
       <div class="stats-box">
         <div class="stat-item">
           <div class="stat-num" id="stat-total">—</div>
@@ -1150,6 +1169,7 @@ aside::before {
     <!-- Bulk action bar -->
     <div class="bulk-bar" id="bulk-bar">
       <span class="bulk-count" id="bulk-count">0 selected</span>
+      <button class="bulk-btn" onclick="selectAll()">Select all</button>
       <button class="bulk-btn reading" onclick="bulkMove('reading')">● Reading</button>
       <button class="bulk-btn want" onclick="bulkMove('want')">◯ Want to read</button>
       <button class="bulk-btn read" onclick="bulkMove('read')">✓ Finished</button>
@@ -1808,15 +1828,32 @@ function render() {
   });
 
   if (q) {
-    filtered = filtered.filter(e => {
-      const ao3Fields = e.ao3Data
-        ? [...(e.ao3Data.relationships||[]), ...(e.ao3Data.characters||[]),
-           ...(e.ao3Data.addlTags||[]), ...(e.ao3Data.categories||[]),
-           ...(e.ao3Data.fandoms||[])].join(' ')
-        : '';
-      return [e.title, e.author, e.fandom, e.notes, ao3Fields]
-        .some(f => (f||'').toLowerCase().includes(q));
-    });
+    // Support field:value tag search syntax
+    const fieldMatch = q.match(/^(\w+):(.+)$/);
+    if (fieldMatch) {
+      const [, field, val] = fieldMatch;
+      const lval = val.toLowerCase();
+      filtered = filtered.filter(e => {
+        if (field === 'fandom') return (e.fandom||'').toLowerCase().includes(lval) || (e.ao3Data?.fandoms||[]).some(f => f.toLowerCase().includes(lval));
+        if (field === 'type') return e.type === lval;
+        if (field === 'ao3Rating') return (e.ao3Data?.ao3Rating||'').toLowerCase().includes(lval);
+        if (field === 'category') return (e.ao3Data?.categories||[]).some(c => c.toLowerCase().includes(lval));
+        if (field === 'warning') return (e.ao3Data?.warnings||[]).some(w => w.toLowerCase().includes(lval));
+        if (field === 'relationship') return (e.ao3Data?.relationships||[]).some(r => r.toLowerCase().includes(lval));
+        if (field === 'addlTag') return (e.ao3Data?.addlTags||[]).some(t => t.toLowerCase().includes(lval));
+        return false;
+      });
+    } else {
+      filtered = filtered.filter(e => {
+        const ao3Fields = e.ao3Data
+          ? [...(e.ao3Data.relationships||[]), ...(e.ao3Data.characters||[]),
+             ...(e.ao3Data.addlTags||[]), ...(e.ao3Data.categories||[]),
+             ...(e.ao3Data.fandoms||[])].join(' ')
+          : '';
+        return [e.title, e.author, e.fandom, e.notes, ao3Fields]
+          .some(f => (f||'').toLowerCase().includes(q));
+      });
+    }
   }
 
   if (sort === 'newest') filtered.sort((a,b) => b.id - a.id);
@@ -1867,9 +1904,12 @@ function render() {
 
   grid.innerHTML = filtered.map(e => {
     const safeTitle = escHtml(e.title);
+    // Title is always a link if URL exists; no separate "Read online"
     const titleHtml = e.url
-      ? `<a href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer">${safeTitle}</a>`
+      ? `<a href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${safeTitle}</a>`
       : safeTitle;
+
+    const tagClick = (field, val) => `onclick="event.stopPropagation(); tagSearch(${JSON.stringify(field)}, ${JSON.stringify(val)})"`;
 
     // Single unified card layout — full details always shown
     return `<div class="card${selectedIds.has(e.id) ? ' selected' : ''}" data-type="${e.type}" data-id="${e.id}" onclick="if(selectMode) toggleSelect(${e.id})">
@@ -1877,46 +1917,44 @@ function render() {
         <div class="card-checkbox" onclick="event.stopPropagation(); toggleSelect(${e.id})">${selectedIds.has(e.id) ? '✓' : ''}</div>
         <div class="card-title">${titleHtml}</div>
         <div class="card-actions">
-          <button class="icon-btn" onclick="openModal(${e.id})" title="Edit">
+          <button class="icon-btn" onclick="event.stopPropagation(); openModal(${e.id})" title="Edit">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11.5 2.5l2 2-9 9H2.5v-2l9-9z"/></svg>
           </button>
-          <button class="icon-btn del" onclick="deleteEntry(${e.id})" title="Remove">
+          <button class="icon-btn del" onclick="event.stopPropagation(); deleteEntry(${e.id})" title="Remove">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,4 13,4"/><path d="M5 4V3h6v1M6 7v5M10 7v5"/><path d="M4 4l1 9h6l1-9"/></svg>
           </button>
         </div>
       </div>
       <div class="card-sub">
         ${e.author ? `<div class="card-author">by ${escHtml(e.author)}</div>` : ''}
-        ${e.fandom ? `<div class="card-fandom">${escHtml(e.fandom)}</div>` : ''}
+        ${e.fandom ? `<div class="card-fandom" style="cursor:pointer" ${tagClick('fandom', e.fandom)}>${escHtml(e.fandom)}</div>` : ''}
       </div>
       <div class="card-tags">
-        <span class="tag tag-${e.type}">${e.type === 'book' ? '⊞ Book' : '❧ Fanfic'}</span>
+        <span class="tag tag-${e.type}" ${tagClick('type', e.type)}>${e.type === 'book' ? '⊞ Book' : '❧ Fanfic'}</span>
         ${statusTag(e.status)}
         ${e.rating ? starsHtml(e.rating) : ''}
         ${e.length ? `<span class="tag tag-read">${escHtml(e.length)}</span>` : ''}
-        ${e.ao3Data && e.ao3Data.ao3Rating ? `<span class="tag ao3-tag rating">${escHtml(e.ao3Data.ao3Rating)}</span>` : ''}
-        ${e.ao3Data ? (e.ao3Data.categories||[]).map(c => `<span class="tag ao3-tag category">${escHtml(c)}</span>`).join('') : ''}
-        ${e.ao3Data ? (e.ao3Data.warnings||[]).map(w => `<span class="tag ao3-tag warning">${escHtml(w)}</span>`).join('') : ''}
+        ${e.ao3Data && e.ao3Data.ao3Rating ? `<span class="tag ao3-tag rating" ${tagClick('ao3Rating', e.ao3Data.ao3Rating)}>${escHtml(e.ao3Data.ao3Rating)}</span>` : ''}
+        ${e.ao3Data ? (e.ao3Data.categories||[]).map(c => `<span class="tag ao3-tag category" ${tagClick('category', c)}>${escHtml(c)}</span>`).join('') : ''}
+        ${e.ao3Data ? (e.ao3Data.warnings||[]).map(w => `<span class="tag ao3-tag warning" ${tagClick('warning', w)}>${escHtml(w)}</span>`).join('') : ''}
+        ${e.ao3Data ? (e.ao3Data.fandoms||[]).map(f => `<span class="tag ao3-tag fandom" ${tagClick('fandom', f)}>${escHtml(f)}</span>`).join('') : ''}
       </div>
       ${e.ao3Data && (e.ao3Data.relationships||[]).length ? `
         <div class="card-pairings">
-          ${e.ao3Data.relationships.map(r => `<span class="pairing-tag">${escHtml(r)}</span>`).join('')}
+          ${e.ao3Data.relationships.map(r => `<span class="pairing-tag" ${tagClick('relationship', r)}>${escHtml(r)}</span>`).join('')}
         </div>` : ''}
       ${e.ao3Data && (e.ao3Data.addlTags||[]).length ? `
         <div class="card-addl-tags">
-          ${e.ao3Data.addlTags.slice(0,12).map(t => `<span class="addl-tag">${escHtml(t)}</span>`).join('')}
-          ${e.ao3Data.addlTags.length > 12 ? `<span class="addl-tag addl-more">+${e.ao3Data.addlTags.length - 12} more</span>` : ''}
+          ${e.ao3Data.addlTags.map(t => `<span class="addl-tag" ${tagClick('addlTag', t)}>${escHtml(t)}</span>`).join('')}
         </div>` : ''}
       ${e.notes ? `<div class="card-notes">${escHtml(e.notes)}</div>` : ''}
       <div class="card-meta">
-        <span>${e.date ? `<span class="card-date">${fmtDate(e.date)}</span>` : ''}</span>
-        ${e.url ? `<a class="card-link" href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer">Read online <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h6v6"/><line x1="2" y1="8" x2="8" y2="2"/></svg></a>` : ''}
+        ${e.date ? `<span class="card-date">${fmtDate(e.date)}</span>` : '<span></span>'}
       </div>
     </div>`;
   }).join('');
+  renderFandomList();
 }
-
-// ── AO3 Bookmark Import ──
 function openBmImport() {
   document.getElementById('bm-import-backdrop').classList.add('open');
   document.getElementById('bm-json-input').value = '';
@@ -1989,11 +2027,63 @@ async function importBookmarks() {
 }
 
 // ── Version name ──
-document.getElementById('version-tag').textContent = 'Palimpsest';
+document.getElementById('version-tag').textContent = 'Ptolemy';
+
+// ── Tag search ──
+function tagSearch(field, val) {
+  // Set the search box to a structured query and trigger render
+  const q = `${field}:${val}`;
+  document.getElementById('search').value = q;
+  // Reset filter to all so nothing is hidden
+  activeFilter = 'all';
+  document.querySelectorAll('.chip').forEach(c => {
+    c.className = 'chip' + (c.dataset.chip === 'all' ? ' active-all' : '');
+  });
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  render();
+}
+
+// ── Fandom list sidebar ──
+let showingFandoms = false;
+function toggleFandomList() {
+  showingFandoms = !showingFandoms;
+  renderFandomList();
+}
+function renderFandomList() {
+  const el = document.getElementById('fandom-list');
+  if (!el) return;
+  if (!showingFandoms) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  const fandoms = {};
+  entries.forEach(e => {
+    const f = e.fandom ? e.fandom.trim() : null;
+    if (f) fandoms[f] = (fandoms[f] || 0) + 1;
+    if (e.ao3Data) (e.ao3Data.fandoms||[]).forEach(f2 => {
+      const k = f2.trim();
+      if (k) fandoms[k] = (fandoms[k] || 0) + 1;
+    });
+  });
+  const sorted = Object.entries(fandoms).sort((a,b) => b[1]-a[1]);
+  el.style.display = 'block';
+  el.innerHTML = sorted.map(([f, n]) =>
+    `<button class="nav-item" style="font-size:14px;padding:4px 8px" onclick="tagSearch('fandom','${escHtml(f).replace(/'/g,"\\'")}')">
+      <span class="nav-dot" style="background:var(--c-fic)"></span>
+      <span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(f)}</span>
+      <span class="count">${n}</span>
+    </button>`
+  ).join('');
+}
 
 // ── Multiselect ──
 let selectMode = false;
 let selectedIds = new Set();
+
+function selectAll() {
+  // Select all currently visible entries
+  const visibleIds = [...document.querySelectorAll('.card[data-id]')].map(c => Number(c.dataset.id));
+  visibleIds.forEach(id => selectedIds.add(id));
+  updateBulkBar();
+  render();
+}
 
 function toggleSelectMode() {
   selectMode = !selectMode;
