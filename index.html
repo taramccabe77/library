@@ -905,9 +905,15 @@ aside::before {
 }
 .footer-tag:hover { color: var(--c-text2); }
 .footer-date { color: var(--c-text3); font-size: 12px; }
-.ao3-tag.category { background: var(--c-fic-bg); color: var(--c-fic); }
-.ao3-tag.rating { background: rgba(200,150,58,0.12); color: var(--c-gold2); }
-.ao3-tag.fandom { background: var(--c-book-bg); color: var(--c-book); }
+.footer-stars { display: inline-flex; align-items: center; line-height: 1; }
+.footer-stars .stars { font-size: 13px; letter-spacing: 0.5px; }
+.ao3-tag.warning  { background: rgba(100,115,130,0.18); color: rgba(160,180,200,0.85); }
+.ao3-tag.category { background: rgba(100,115,130,0.18); color: rgba(160,180,200,0.85); }
+.ao3-tag.rating   { background: rgba(100,115,130,0.18); color: rgba(160,180,200,0.85); }
+.ao3-tag.fandom   { background: var(--c-book-bg); color: var(--c-book); }
+
+/* ── CARD BADGES (rating/categories/warnings unified row) ── */
+.card-badges { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 
 /* ── DROP OVERLAY ── */
 .drop-overlay {
@@ -1584,7 +1590,7 @@ async function fetchAO3() {
       const authorEl = doc.querySelector('h3.byline.heading a, .byline a');
       const author = authorEl ? authorEl.textContent.trim() : '';
       const summaryEl = doc.querySelector('.summary.module blockquote, .summary blockquote');
-      const summary = summaryEl ? summaryEl.textContent.trim().slice(0, 300) : '';
+      const summary = summaryEl ? summaryEl.textContent.trim() : '';
       const fandoms = [...doc.querySelectorAll('.fandom.tags a.tag, .fandoms a.tag')].map(a => a.textContent.trim());
       const ratingEl = doc.querySelector('.rating.tags a.tag, .rating a.tag, span.rating');
       const ao3Rating = ratingEl ? ratingEl.textContent.trim() : '';
@@ -1630,7 +1636,7 @@ async function fetchAO3() {
 {
   "title": string,
   "author": string,
-  "summary": string (max 300 chars),
+  "summary": string (full text, do not truncate),
   "fandoms": string[],
   "ao3Rating": string,
   "categories": string[],
@@ -1949,18 +1955,19 @@ function render() {
 
     const tagClick = (field, val) => `onclick="event.stopPropagation(); tagSearch(${JSON.stringify(field)}, ${JSON.stringify(val)})"`;
 
-    // Deduplicate warnings — some entries have the same warning from both
-    // the import and the AO3 scraper; normalise and unique them
-    const CNTW = 'Creator Chose Not To Use Archive Warnings';
-    const NAWA = 'No Archive Warnings Apply';
+    // Deduplicate warnings
     const rawWarnings = e.ao3Data ? (e.ao3Data.warnings||[]) : [];
     const warnings = [...new Set(rawWarnings.map(w => w.trim()))];
 
-    // ao3 fandoms — only show if they add info beyond e.fandom
-    const mainFandom = (e.fandom||'').toLowerCase();
-    const ao3Fandoms = e.ao3Data ? (e.ao3Data.fandoms||[]).filter(f => f.toLowerCase() !== mainFandom) : [];
+    // All fandoms — merge e.fandom + ao3Data.fandoms, deduplicated, shown as text only
+    const allFandoms = [...new Set([
+      ...(e.fandom ? [e.fandom] : []),
+      ...(e.ao3Data ? (e.ao3Data.fandoms||[]) : [])
+    ].map(f => f.trim()).filter(Boolean))];
 
-    // Single unified card layout — full details always shown
+    // Badges: rating + categories + warnings — all same colour, shown together
+    const hasBadges = e.ao3Data && (e.ao3Data.ao3Rating || (e.ao3Data.categories||[]).length || warnings.length);
+
     return `<div class="card${selectedIds.has(e.id) ? ' selected' : ''}" data-type="${e.type}" data-id="${e.id}" onclick="if(selectMode) toggleSelect(${e.id})">
       <div class="card-header">
         <div class="card-checkbox" onclick="event.stopPropagation(); toggleSelect(${e.id})">${selectedIds.has(e.id) ? '✓' : ''}</div>
@@ -1976,25 +1983,25 @@ function render() {
       </div>
       <div class="card-sub">
         ${e.author ? `<div class="card-author">by ${escHtml(e.author)}</div>` : ''}
-        ${e.fandom ? `<div class="card-fandom" style="cursor:pointer" ${tagClick('fandom', e.fandom)}>${escHtml(e.fandom)}</div>` : ''}
+        ${allFandoms.length ? `<div class="card-fandom">${allFandoms.map(f => `<span style="cursor:pointer" ${tagClick('fandom', f)}>${escHtml(f)}</span>`).join('<span style="opacity:0.35;margin:0 3px">·</span>')}</div>` : ''}
       </div>
-      <div class="card-tags">
-        ${e.rating ? starsHtml(e.rating) : ''}
-        ${e.ao3Data && e.ao3Data.ao3Rating ? `<span class="tag ao3-tag rating" ${tagClick('ao3Rating', e.ao3Data.ao3Rating)}>${escHtml(e.ao3Data.ao3Rating)}</span>` : ''}
-        ${e.ao3Data ? (e.ao3Data.categories||[]).map(c => `<span class="tag ao3-tag category" ${tagClick('category', c)}>${escHtml(c)}</span>`).join('') : ''}
+      ${hasBadges ? `
+      <div class="card-badges">
+        ${e.ao3Data.ao3Rating ? `<span class="tag ao3-tag rating" ${tagClick('ao3Rating', e.ao3Data.ao3Rating)}>${escHtml(e.ao3Data.ao3Rating)}</span>` : ''}
+        ${(e.ao3Data.categories||[]).map(c => `<span class="tag ao3-tag category" ${tagClick('category', c)}>${escHtml(c)}</span>`).join('')}
         ${warnings.map(w => `<span class="tag ao3-tag warning" ${tagClick('warning', w)}>${escHtml(w)}</span>`).join('')}
-        ${ao3Fandoms.map(f => `<span class="tag ao3-tag fandom" ${tagClick('fandom', f)}>${escHtml(f)}</span>`).join('')}
+      </div>` : ''}
+      <div class="card-tags">
+        ${e.ao3Data && (e.ao3Data.relationships||[]).length
+          ? [...new Set(e.ao3Data.relationships)].map(r => `<span class="pairing-tag" ${tagClick('relationship', r)}>${escHtml(r)}</span>`).join('')
+          : ''}
+        ${e.ao3Data && (e.ao3Data.addlTags||[]).length
+          ? [...new Set(e.ao3Data.addlTags)].map(t => `<span class="addl-tag" ${tagClick('addlTag', t)}>${escHtml(t)}</span>`).join('')
+          : ''}
       </div>
-      ${e.ao3Data && (e.ao3Data.relationships||[]).length ? `
-        <div class="card-pairings">
-          ${[...new Set(e.ao3Data.relationships)].map(r => `<span class="pairing-tag" ${tagClick('relationship', r)}>${escHtml(r)}</span>`).join('')}
-        </div>` : ''}
-      ${e.ao3Data && (e.ao3Data.addlTags||[]).length ? `
-        <div class="card-addl-tags">
-          ${[...new Set(e.ao3Data.addlTags)].map(t => `<span class="addl-tag" ${tagClick('addlTag', t)}>${escHtml(t)}</span>`).join('')}
-        </div>` : ''}
       ${e.notes ? `<div class="card-notes">${escHtml(e.notes)}</div>` : ''}
       <div class="card-footer">
+        ${e.rating ? `<span class="footer-stars">${starsHtml(e.rating)}</span><span class="footer-sep">·</span>` : ''}
         <span class="footer-tag footer-type" ${tagClick('type', e.type)}>${e.type === 'book' ? '✦ Book' : '✶ Fanfic'}</span>
         <span class="footer-sep">·</span>
         ${statusTag(e.status)}
@@ -2078,7 +2085,7 @@ async function importBookmarks() {
 
 // ── Version name ──
 // ── VERSION — update this every single deploy ──
-document.getElementById('version-tag').textContent = 'Atwood';
+document.getElementById('version-tag').textContent = 'LeGuin';
 
 // ── Tag search ──
 function tagSearch(field, val) {
