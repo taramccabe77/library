@@ -612,8 +612,8 @@ aside::before {
 }
 .fandom-chip {
   display: inline-block;
-  background: rgba(106,175,222,0.12);
-  color: var(--c-book);
+  background: rgba(90,185,120,0.14);
+  color: #6acf90;
   padding: 1px 10px;
   border-radius: 20px;
   font-size: 15px;
@@ -900,7 +900,6 @@ aside::before {
   color: var(--c-text2);
   border: none;
 }
-.ao3-tag.warning { background: rgba(140,120,80,0.15); color: rgba(200,175,110,0.85); }
 
 /* ── CARD FOOTER ── */
 .card-footer {
@@ -920,9 +919,9 @@ aside::before {
 .footer-date { color: var(--c-text3); font-size: 12px; }
 .footer-stars { display: inline-flex; align-items: center; line-height: 1; }
 .footer-stars .stars { font-size: 13px; letter-spacing: 0.5px; }
-.ao3-tag.warning  { background: rgba(180,140,80,0.2); color: #d4b070; }
-.ao3-tag.category { background: rgba(130,160,200,0.18); color: #90b8e0; }
-.ao3-tag.rating   { background: rgba(160,130,200,0.18); color: #b090d8; }
+.ao3-tag.warning  { background: rgba(195,145,55,0.18); color: #d4a050; }
+.ao3-tag.category { background: rgba(195,145,55,0.18); color: #d4a050; }
+.ao3-tag.rating   { background: rgba(195,145,55,0.18); color: #d4a050; }
 .ao3-tag.fandom   { background: var(--c-book-bg); color: var(--c-book); }
 
 /* ── CARD BADGES (rating/categories/warnings unified row) ── */
@@ -1028,8 +1027,8 @@ aside::before {
   font-size: 13px;
   font-family: var(--serif);
   font-style: italic;
-  color: var(--c-fic);
-  background: var(--c-fic-bg);
+  color: #d4707a;
+  background: rgba(212,112,122,0.14);
   padding: 2px 9px;
   border-radius: 20px;
   cursor: pointer;
@@ -2108,7 +2107,7 @@ async function importBookmarks() {
 
 // ── Version name ──
 // ── VERSION — update this every single deploy ──
-document.getElementById('version-tag').textContent = 'Nabokov';
+document.getElementById('version-tag').textContent = 'Achebe';
 
 // ── Tag search ──
 function tagSearch(field, val) {
