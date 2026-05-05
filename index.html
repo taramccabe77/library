@@ -1735,7 +1735,7 @@ async function fetchAO3() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 4000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         system: `You are a metadata extractor. When given an AO3 work URL, use web_search to fetch the page and extract structured metadata. Return ONLY a valid JSON object with these exact fields (use null if not found):
@@ -1894,13 +1894,16 @@ Notes should only be filled if the info includes a summary or meaningful descrip
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
 
-    if (!res.ok) throw new Error('API error ' + res.status);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(`API ${res.status}: ${errData?.error?.message || res.statusText}`);
+    }
     const data = await res.json();
     const raw = data.content.map(b => b.text || '').join('');
     const clean = raw.replace(/```json|```/g, '').trim();
@@ -1919,7 +1922,7 @@ Notes should only be filled if the info includes a summary or meaningful descrip
     setEnrichStatus('✓ Fields filled in — review and save!', 'ok');
   } catch (err) {
     console.error('Enrich error:', err);
-    setEnrichStatus('Something went wrong. Try again.', 'err');
+    setEnrichStatus('Error: ' + err.message, 'err');
   } finally {
     btn.disabled = false;
   }
