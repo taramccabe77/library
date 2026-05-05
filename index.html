@@ -879,72 +879,101 @@ aside::before {
 .ao3-status.ok { color: var(--c-reading); }
 .ao3-status.err { color: var(--c-red); }
 
-/* ── AI ENRICH ── */
-.enrich-section {
-  border: 1px solid rgba(184,144,224,0.25);
-  border-radius: 10px;
-  overflow: hidden;
-  background: rgba(184,144,224,0.05);
+/* ── FIC EXTRA FIELDS (manual tag inputs) ── */
+#fic-extra-fields { display: none; flex-direction: column; gap: 14px; }
+#fic-extra-fields.visible { display: flex; }
+
+.tag-input-wrap {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 8px 10px; min-height: 40px;
+  background: var(--c-bg3); border-radius: 8px; cursor: text;
+  align-items: center;
 }
-.enrich-toggle {
-  width: 100%;
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px;
-  background: none; border: none;
-  color: var(--c-fic); font-family: var(--sans); font-size: 18px;
-  cursor: pointer; text-align: left;
-  transition: background 0.15s;
+.tag-input-wrap input {
+  border: none; background: none; outline: none;
+  font-family: var(--sans); font-size: 17px; color: var(--c-text);
+  flex: 1; min-width: 120px; padding: 2px 0;
 }
-.enrich-toggle:hover { background: rgba(184,144,224,0.08); }
-.enrich-toggle .enrich-chevron {
-  margin-left: auto;
-  transition: transform 0.2s;
-  opacity: 0.6;
+.tag-input-wrap input::placeholder { color: var(--c-text3); }
+.tag-pill {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 20px;
+  font-size: 15px; font-family: var(--sans);
+  background: var(--c-bg4); color: var(--c-text2);
+  white-space: nowrap; max-width: 240px;
 }
-.enrich-toggle.open .enrich-chevron { transform: rotate(180deg); }
-.enrich-body {
-  display: none;
-  flex-direction: column;
-  gap: 10px;
-  padding: 0 14px 14px;
+.tag-pill span { overflow: hidden; text-overflow: ellipsis; }
+.tag-pill-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--c-text3); font-size: 14px; padding: 0 0 1px 2px;
+  line-height: 1; flex-shrink: 0;
 }
-.enrich-body.open { display: flex; }
-.enrich-body textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 10px 12px;
-  border-radius: 8px; border: none;
-  background: var(--c-bg3);
-  color: var(--c-text);
-  font-family: var(--sans); font-size: 17px;
-  resize: vertical; outline: none;
-  line-height: 1.5;
+.tag-pill-remove:hover { color: var(--c-red); }
+.tag-pill.pill-rating { background: rgba(195,145,55,0.18); color: #d4a050; }
+.tag-pill.pill-category { background: rgba(195,145,55,0.18); color: #d4a050; }
+.tag-pill.pill-warning { background: rgba(195,145,55,0.18); color: #d4a050; }
+.tag-pill.pill-fandom { background: var(--c-book-bg); color: var(--c-book); }
+.tag-pill.pill-pairing { background: rgba(106,207,144,0.12); color: var(--c-reading); }
+
+.field-hint { font-size: 15px; color: var(--c-text3); margin-top: -8px; }
+
+/* ── YEAR IN REVIEW PAGE ── */
+#yir-page {
+  display: none; flex-direction: column; gap: 24px;
+  padding: 24px 28px; max-width: 780px; margin: 0 auto;
 }
-.enrich-body textarea:focus { background: var(--c-bg4); }
-.enrich-body textarea::placeholder { color: var(--c-text3); }
-.enrich-actions { display: flex; align-items: center; gap: 10px; }
-.btn-enrich {
-  padding: 8px 16px;
-  border-radius: 8px; border: none;
-  background: var(--c-fic-bg);
-  color: var(--c-fic);
-  font-family: var(--sans); font-size: 17px; font-weight: 500;
-  cursor: pointer; white-space: nowrap;
-  transition: all 0.15s;
-  display: flex; align-items: center; gap: 6px;
+#yir-page.visible { display: flex; }
+.yir-header {
+  display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap;
 }
-.btn-enrich:hover { background: rgba(168,130,216,0.22); }
-.btn-enrich:disabled { opacity: 0.45; cursor: not-allowed; }
-.enrich-hint {
-  font-size: 16px; color: var(--c-text3);
-  line-height: 1.4;
+.yir-title {
+  font-family: var(--serif); font-size: 28px; font-weight: 400;
+  color: var(--c-gold); flex: 1;
 }
-.enrich-status {
-  font-size: 17px; color: var(--c-text3);
-  min-height: 16px; transition: color 0.2s;
+.yir-year-select {
+  background: var(--c-bg3); border: 1px solid var(--c-border);
+  color: var(--c-text); font-family: var(--sans); font-size: 17px;
+  padding: 6px 12px; border-radius: 8px; cursor: pointer; outline: none;
 }
-.enrich-status.ok { color: var(--c-reading); }
-.enrich-status.err { color: var(--c-red); }
+.yir-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+.yir-stat {
+  background: var(--c-bg2); border: 1px solid var(--c-border);
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.yir-stat-num {
+  font-family: var(--serif); font-size: 32px; font-weight: 400;
+  color: var(--c-gold2); line-height: 1;
+}
+.yir-stat-lbl { font-size: 15px; color: var(--c-text3); }
+.yir-section-title {
+  font-family: var(--serif); font-size: 20px; font-weight: 400;
+  color: var(--c-text2); border-bottom: 1px solid var(--c-border);
+  padding-bottom: 8px; margin-bottom: 4px;
+}
+.yir-list { display: flex; flex-direction: column; gap: 10px; }
+.yir-entry {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 10px 14px; background: var(--c-bg2);
+  border-radius: 10px; border: 1px solid var(--c-border);
+}
+.yir-entry-title {
+  font-family: var(--serif); font-size: 17px; flex: 1;
+  color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.yir-entry-meta { font-size: 14px; color: var(--c-text3); white-space: nowrap; }
+.yir-empty { color: var(--c-text3); font-size: 17px; padding: 24px 0; text-align: center; }
+.yir-month-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 2px;
+}
+.yir-month-label { font-size: 14px; color: var(--c-text3); width: 36px; flex-shrink: 0; }
+.yir-month-bar-wrap { flex: 1; height: 10px; background: var(--c-bg3); border-radius: 5px; overflow: hidden; }
+.yir-month-bar { height: 100%; background: var(--c-gold); border-radius: 5px; transition: width 0.4s; }
+.yir-month-count { font-size: 13px; color: var(--c-text3); width: 20px; text-align: right; }
 
 /* ── AO3 METADATA TAGS on cards ── */
 .ao3-meta {
@@ -1269,6 +1298,13 @@ aside::before {
     </div>
 
     <div class="sidebar-section">
+      <span class="sidebar-section-label">More</span>
+      <button class="nav-item" id="nav-yir" onclick="openYIR()">
+        <span style="font-size:13px">✦</span> Year in Review
+      </button>
+    </div>
+
+    <div class="sidebar-section">
       <div class="stats-box">
         <div class="stat-item">
           <div class="stat-num" id="stat-total">—</div>
@@ -1342,6 +1378,23 @@ aside::before {
   </main>
 </div>
 
+<!-- Year in Review Page -->
+<div id="yir-page">
+  <div class="yir-header">
+    <div class="yir-title">✦ Year in Review</div>
+    <select class="yir-year-select" id="yir-year" onchange="renderYIR()"></select>
+  </div>
+  <div class="yir-grid" id="yir-stats"></div>
+  <div>
+    <div class="yir-section-title">Finished this year</div>
+    <div class="yir-list" id="yir-finished-list"></div>
+  </div>
+  <div>
+    <div class="yir-section-title">Reads per month</div>
+    <div id="yir-months"></div>
+  </div>
+</div>
+
 <!-- Modal -->
 <div class="modal-backdrop" id="modal-backdrop" onclick="closeOnBackdrop(event)">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -1365,28 +1418,6 @@ aside::before {
           </button>
         </div>
         <div class="ao3-status" id="ao3-status"></div>
-      </div>
-
-      <!-- AI Enrich (shown only for fanfic when editing) -->
-      <div id="enrich-section" style="display:none">
-        <div class="enrich-section">
-          <button class="enrich-toggle" id="enrich-toggle" onclick="toggleEnrich()">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7.5 1v2M7.5 12v2M1 7.5h2M12 7.5h2M3.2 3.2l1.4 1.4M10.4 10.4l1.4 1.4M10.4 4.6l-1.4 1.4M4.6 10.4l-1.4 1.4"/><circle cx="7.5" cy="7.5" r="2.5"/></svg>
-            Enrich with AI
-            <svg class="enrich-chevron" width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 4.5l4.5 4.5 4.5-4.5"/></svg>
-          </button>
-          <div class="enrich-body" id="enrich-body">
-            <span class="enrich-hint">Paste anything about this fic — an AO3 URL, the work header text, a description, whatever you have. Claude will fill in the fields.</span>
-            <textarea id="enrich-input" placeholder="e.g. https://archiveofourown.org/works/12345&#10;or: 'A 80k slow burn fic by AuthorName, Harry Potter, Harry/Draco, rated M, complete…'"></textarea>
-            <div class="enrich-actions">
-              <button class="btn-enrich" id="btn-enrich" onclick="enrichEntry()">
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7.5 1v2M7.5 12v2M1 7.5h2M12 7.5h2M3.2 3.2l1.4 1.4M10.4 10.4l1.4 1.4M10.4 4.6l-1.4 1.4M4.6 10.4l-1.4 1.4"/></svg>
-                Fill in fields
-              </button>
-              <span class="enrich-status" id="enrich-status"></span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="field">
@@ -1417,6 +1448,16 @@ aside::before {
           <input id="f-length" type="text" placeholder="e.g. 342 pages" />
         </div>
       </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Date added</label>
+          <input id="f-date" type="date" />
+        </div>
+        <div class="field">
+          <label>Date finished</label>
+          <input id="f-date-finished" type="date" />
+        </div>
+      </div>
       <div class="field">
         <label>Link to work</label>
         <input id="f-url" type="url" placeholder="https://archiveofourown.org/…" />
@@ -1431,6 +1472,58 @@ aside::before {
           <button type="button" onclick="setRating(5)">★</button>
         </div>
       </div>
+
+      <!-- Fic-only extra fields -->
+      <div id="fic-extra-fields">
+        <div class="field-row">
+          <div class="field">
+            <label>AO3 Rating</label>
+            <select id="f-ao3rating">
+              <option value="">— select —</option>
+              <option>Not Rated</option>
+              <option>General Audiences</option>
+              <option>Teen And Up Audiences</option>
+              <option>Mature</option>
+              <option>Explicit</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Chapters</label>
+            <input id="f-chapters" type="text" placeholder="e.g. 24/24" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <div class="tag-input-wrap" id="wrap-categories" onclick="focusTagInput('inp-categories')">
+            <input id="inp-categories" placeholder="F/F, M/M, F/M, Gen… press Enter" onkeydown="handleTagKey(event,'categories')" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Warnings</label>
+          <div class="tag-input-wrap" id="wrap-warnings" onclick="focusTagInput('inp-warnings')">
+            <input id="inp-warnings" placeholder="e.g. No Archive Warnings Apply… press Enter" onkeydown="handleTagKey(event,'warnings')" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Pairings / Relationships</label>
+          <div class="tag-input-wrap" id="wrap-relationships" onclick="focusTagInput('inp-relationships')">
+            <input id="inp-relationships" placeholder="e.g. Harry/Draco… press Enter" onkeydown="handleTagKey(event,'relationships')" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Characters</label>
+          <div class="tag-input-wrap" id="wrap-characters" onclick="focusTagInput('inp-characters')">
+            <input id="inp-characters" placeholder="e.g. Hermione Granger… press Enter" onkeydown="handleTagKey(event,'characters')" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Additional Tags</label>
+          <div class="tag-input-wrap" id="wrap-addlTags" onclick="focusTagInput('inp-addlTags')">
+            <input id="inp-addlTags" placeholder="e.g. Slow Burn, Hurt/Comfort… press Enter" onkeydown="handleTagKey(event,'addlTags')" />
+          </div>
+        </div>
+      </div>
+
       <div class="field">
         <label>Notes & thoughts</label>
         <textarea id="f-notes" placeholder="What did you think? Any memorable moments?"></textarea>
@@ -1619,10 +1712,12 @@ function setType(t) {
   document.getElementById('ao3-import-section').style.display = t === 'fic' ? 'flex' : 'none';
   document.getElementById('ao3-import-section').style.flexDirection = 'column';
   document.getElementById('ao3-import-section').style.gap = '4px';
-  // Show enrich section only when editing a fic
-  const enrichSection = document.getElementById('enrich-section');
-  enrichSection.style.display = (t === 'fic' && editingId) ? 'block' : 'none';
+  const ficExtra = document.getElementById('fic-extra-fields');
+  if (t === 'fic') ficExtra.classList.add('visible');
+  else ficExtra.classList.remove('visible');
 }
+
+// ── AO3 Import ──
 let ao3Data = null; // stores parsed metadata for current modal session
 
 async function fetchAO3() {
@@ -1720,6 +1815,9 @@ async function fetchAO3() {
         if (wordCount) document.getElementById('f-length').value = Number(wordCount).toLocaleString() + ' words';
         if (!document.getElementById('f-url').value) document.getElementById('f-url').value = `https://archiveofourown.org/works/${workId}`;
         if (summary && !document.getElementById('f-notes').value) document.getElementById('f-notes').value = summary;
+        if (ao3Rating) document.getElementById('f-ao3rating').value = ao3Rating;
+        if (chapters) document.getElementById('f-chapters').value = chapters;
+        loadTagStates(ao3Data);
         const parts = [ao3Rating, categories.join(', '), chapters ? `${chapters} chapters` : ''].filter(Boolean);
         setAO3Status('Imported: ' + parts.join(' · '), 'ok');
         btn.disabled = false;
@@ -1735,7 +1833,7 @@ async function fetchAO3() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         system: `You are a metadata extractor. When given an AO3 work URL, use web_search to fetch the page and extract structured metadata. Return ONLY a valid JSON object with these exact fields (use null if not found):
@@ -1796,6 +1894,9 @@ Do not include any other text, explanation, or markdown — only the raw JSON ob
     if (wordCount) document.getElementById('f-length').value = Number(wordCount).toLocaleString() + ' words';
     if (!document.getElementById('f-url').value) document.getElementById('f-url').value = `https://archiveofourown.org/works/${workId}`;
     if (summary && !document.getElementById('f-notes').value) document.getElementById('f-notes').value = summary;
+    if (ao3Rating) document.getElementById('f-ao3rating').value = ao3Rating;
+    if (chapters) document.getElementById('f-chapters').value = chapters;
+    loadTagStates(ao3Data);
 
     const parts = [];
     if (ao3Rating) parts.push(ao3Rating);
@@ -1821,111 +1922,58 @@ function setRating(n) {
   btns.forEach((b, i) => b.classList.toggle('lit', i < currentRating));
 }
 
-// ── AI Enrich ──
-function toggleEnrich() {
-  const toggle = document.getElementById('enrich-toggle');
-  const body = document.getElementById('enrich-body');
-  toggle.classList.toggle('open');
-  body.classList.toggle('open');
-}
+// ── Tag Input System ──
+const tagState = { categories: [], warnings: [], relationships: [], characters: [], addlTags: [] };
+const TAG_PILL_CLASS = { categories: 'pill-category', warnings: 'pill-warning', relationships: 'pill-pairing', characters: '', addlTags: '' };
 
-function setEnrichStatus(msg, cls) {
-  const el = document.getElementById('enrich-status');
-  el.textContent = msg;
-  el.className = 'enrich-status' + (cls ? ' ' + cls : '');
-}
+function focusTagInput(id) { document.getElementById(id)?.focus(); }
 
-async function enrichEntry() {
-  const info = document.getElementById('enrich-input').value.trim();
-  if (!info) {
-    setEnrichStatus('Paste some info about the fic first.', 'err');
-    return;
+function handleTagKey(e, field) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,$/, '');
+    if (val) addTag(field, val);
+    e.target.value = '';
+  } else if (e.key === 'Backspace' && !e.target.value && tagState[field].length) {
+    removeTag(field, tagState[field].length - 1);
   }
-
-  const btn = document.getElementById('btn-enrich');
-  btn.disabled = true;
-  setEnrichStatus('Thinking…', '');
-
-  // Gather what's already filled in so Claude can avoid overwriting good data
-  const existing = {
-    title: document.getElementById('f-title').value.trim(),
-    author: document.getElementById('f-author').value.trim(),
-    fandom: document.getElementById('f-fandom').value.trim(),
-    length: document.getElementById('f-length').value.trim(),
-    url: document.getElementById('f-url').value.trim(),
-    notes: document.getElementById('f-notes').value.trim(),
-  };
-
-  const prompt = `You are helping fill in metadata for a fanfiction entry in a personal reading tracker app.
-
-The user has provided this information about the fic:
----
-${info}
----
-
-Currently filled in fields (may be empty or partial):
-- Title: ${existing.title || '(empty)'}
-- Author: ${existing.author || '(empty)'}
-- Fandom: ${existing.fandom || '(empty)'}
-- Word count / length: ${existing.length || '(empty)'}
-- Link/URL: ${existing.url || '(empty)'}
-- Notes: ${existing.notes || '(empty)'}
-
-Extract or infer as much metadata as possible from the provided info. For any field that already has a good value, you may keep it or improve it. If you cannot determine a value, return an empty string for that field.
-
-For the URL: if the user pasted an AO3 URL, return it. Otherwise return empty.
-For word count: return just the number or a short string like "85,000 words".
-For fandom: return the main fandom(s), comma-separated if multiple.
-
-Respond ONLY with a valid JSON object, no markdown, no explanation:
-{
-  "title": "",
-  "author": "",
-  "fandom": "",
-  "length": "",
-  "url": "",
-  "notes": ""
 }
 
-Notes should only be filled if the info includes a summary or meaningful description — otherwise leave empty so the user can write their own thoughts.`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(`API ${res.status}: ${errData?.error?.message || res.statusText}`);
-    }
-    const data = await res.json();
-    const raw = data.content.map(b => b.text || '').join('');
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-
-    // Fill in fields — only overwrite empty fields, unless the enriched value is clearly better
-    if (parsed.title && !existing.title) document.getElementById('f-title').value = parsed.title;
-    if (parsed.author && (!existing.author || existing.author.length < parsed.author.length))
-      document.getElementById('f-author').value = parsed.author;
-    if (parsed.fandom && (!existing.fandom || existing.fandom.length < parsed.fandom.length))
-      document.getElementById('f-fandom').value = parsed.fandom;
-    if (parsed.length && !existing.length) document.getElementById('f-length').value = parsed.length;
-    if (parsed.url && !existing.url) document.getElementById('f-url').value = parsed.url;
-    if (parsed.notes && !existing.notes) document.getElementById('f-notes').value = parsed.notes;
-
-    setEnrichStatus('✓ Fields filled in — review and save!', 'ok');
-  } catch (err) {
-    console.error('Enrich error:', err);
-    setEnrichStatus('Error: ' + err.message, 'err');
-  } finally {
-    btn.disabled = false;
+function addTag(field, val) {
+  if (!tagState[field].includes(val)) {
+    tagState[field].push(val);
+    renderTagWrap(field);
   }
+}
+
+function removeTag(field, idx) {
+  tagState[field].splice(idx, 1);
+  renderTagWrap(field);
+}
+
+function renderTagWrap(field) {
+  const wrap = document.getElementById('wrap-' + field);
+  const inp = document.getElementById('inp-' + field);
+  // Remove existing pills
+  [...wrap.querySelectorAll('.tag-pill')].forEach(p => p.remove());
+  tagState[field].forEach((val, i) => {
+    const pill = document.createElement('span');
+    pill.className = 'tag-pill ' + (TAG_PILL_CLASS[field] || '');
+    pill.innerHTML = `<span>${escHtml(val)}</span><button class="tag-pill-remove" onclick="removeTag('${field}',${i})" title="Remove">×</button>`;
+    wrap.insertBefore(pill, inp);
+  });
+}
+
+function clearTagStates() {
+  Object.keys(tagState).forEach(k => { tagState[k] = []; renderTagWrap(k); });
+}
+
+function loadTagStates(ao3Data) {
+  clearTagStates();
+  if (!ao3Data) return;
+  ['categories','warnings','relationships','characters','addlTags'].forEach(k => {
+    (ao3Data[k] || []).forEach(v => addTag(k, v));
+  });
 }
 
 // ── Modal ──
@@ -1939,14 +1987,13 @@ function openModal(id) {
   document.getElementById('modal-title').textContent = id ? 'Edit entry' : 'Add to shelf';
   document.getElementById('ao3-url-input').value = '';
   setAO3Status('', '');
-  document.getElementById('enrich-input').value = '';
-  setEnrichStatus('', '');
-  document.getElementById('enrich-toggle').classList.remove('open');
-  document.getElementById('enrich-body').classList.remove('open');
-  ['f-title','f-author','f-fandom','f-status','f-length','f-url','f-notes'].forEach(fid => {
-    document.getElementById(fid).value = '';
+  clearTagStates();
+  ['f-title','f-author','f-fandom','f-status','f-length','f-url','f-notes','f-date','f-date-finished','f-ao3rating','f-chapters'].forEach(fid => {
+    const el = document.getElementById(fid);
+    if (el) el.value = '';
   });
   document.getElementById('f-status').value = 'want';
+  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
   if (id) {
     const e = entries.find(x => x.id === id);
     if (e) {
@@ -1958,6 +2005,13 @@ function openModal(id) {
       document.getElementById('f-length').value = e.length || '';
       document.getElementById('f-url').value = e.url || '';
       document.getElementById('f-notes').value = e.notes || '';
+      document.getElementById('f-date').value = e.date || new Date().toISOString().slice(0,10);
+      document.getElementById('f-date-finished').value = e.dateFinished || '';
+      if (e.type === 'fic') {
+        document.getElementById('f-ao3rating').value = e.ao3Data?.ao3Rating || '';
+        document.getElementById('f-chapters').value = e.ao3Data?.chapters || '';
+        loadTagStates(e.ao3Data);
+      }
       currentRating = e.rating || 0;
       const btns = document.querySelectorAll('#star-picker button');
       btns.forEach((b, i) => b.classList.toggle('lit', i < currentRating));
@@ -1979,6 +2033,31 @@ function closeOnBackdrop(e) {
 async function saveEntry() {
   const title = document.getElementById('f-title').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
+
+  // Build ao3Data from manual fields (fic) or carry existing (book)
+  let newAo3Data = null;
+  if (currentType === 'fic') {
+    const ao3Rating = document.getElementById('f-ao3rating').value;
+    const chapters = document.getElementById('f-chapters').value.trim();
+    // Merge manually entered tag state with any existing ao3Data fields (fandoms, etc.)
+    newAo3Data = {
+      ...(ao3Data || {}),
+      ao3Rating: ao3Rating || (ao3Data?.ao3Rating || ''),
+      chapters: chapters || (ao3Data?.chapters || ''),
+      categories: tagState.categories.length ? tagState.categories : (ao3Data?.categories || []),
+      warnings: tagState.warnings.length ? tagState.warnings : (ao3Data?.warnings || []),
+      relationships: tagState.relationships.length ? tagState.relationships : (ao3Data?.relationships || []),
+      characters: tagState.characters.length ? tagState.characters : (ao3Data?.characters || []),
+      addlTags: tagState.addlTags.length ? tagState.addlTags : (ao3Data?.addlTags || []),
+    };
+    // Only keep ao3Data if there's something in it
+    const hasAny = newAo3Data.ao3Rating || newAo3Data.chapters ||
+      ['categories','warnings','relationships','characters','addlTags','fandoms'].some(k => (newAo3Data[k]||[]).length);
+    if (!hasAny) newAo3Data = null;
+  } else {
+    newAo3Data = ao3Data || null;
+  }
+
   const entry = {
     id: editingId || Date.now(),
     type: currentType, title,
@@ -1989,10 +2068,9 @@ async function saveEntry() {
     url: document.getElementById('f-url').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
     rating: currentRating || null,
-    ao3Data: ao3Data || null,
-    date: editingId
-      ? (entries.find(x => x.id === editingId) || {}).date || new Date().toISOString().slice(0,10)
-      : new Date().toISOString().slice(0,10),
+    ao3Data: newAo3Data,
+    date: document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
+    dateFinished: document.getElementById('f-date-finished').value || null,
   };
   if (editingId) {
     const idx = entries.findIndex(x => x.id === editingId);
@@ -2017,6 +2095,7 @@ async function deleteEntry(id) {
 
 // ── Filters & view ──
 function setFilter(val, el) {
+  closeYIR();
   activeFilter = val;
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
@@ -2028,6 +2107,7 @@ function setFilter(val, el) {
 }
 
 function setChip(val, el) {
+  closeYIR();
   activeFilter = val;
   document.querySelectorAll('.chip').forEach(c => {
     c.className = 'chip' + (c.dataset.chip === val ? ' active-' + val : '');
@@ -2230,12 +2310,110 @@ function render() {
         <span class="footer-sep">·</span>
         ${statusTag(e.status)}
         ${e.length ? `<span class="footer-sep">·</span><span class="footer-tag footer-length">${escHtml(e.length)}</span>` : ''}
-        ${e.date ? `<span class="footer-sep">·</span><span class="footer-date">${fmtDate(e.date)}</span>` : ''}
+        ${e.dateFinished ? `<span class="footer-sep">·</span><span class="footer-date">Finished ${fmtDate(e.dateFinished)}</span>` : e.date ? `<span class="footer-sep">·</span><span class="footer-date">${fmtDate(e.date)}</span>` : ''}
       </div>
     </div>`;
   }).join('');
   renderFandomList();
 }
+// ── Year in Review ──
+function openYIR() {
+  // Hide main, show YIR
+  document.querySelector('main').style.display = 'none';
+  document.getElementById('yir-page').classList.add('visible');
+  // Mark nav item active
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-yir').classList.add('active');
+
+  // Populate year selector
+  const years = [...new Set(entries.map(e => {
+    const d = e.dateFinished || e.date;
+    return d ? d.slice(0,4) : null;
+  }).filter(Boolean))].sort((a,b) => b-a);
+  const currentYear = new String(new Date().getFullYear());
+  if (!years.includes(currentYear)) years.unshift(currentYear);
+  const sel = document.getElementById('yir-year');
+  sel.innerHTML = years.map(y => `<option value="${y}"${y===currentYear?' selected':''}>${y}</option>`).join('');
+  renderYIR();
+}
+
+function closeYIR() {
+  document.querySelector('main').style.display = '';
+  document.getElementById('yir-page').classList.remove('visible');
+}
+
+function renderYIR() {
+  const year = document.getElementById('yir-year').value;
+
+  // Entries finished in selected year — use dateFinished if set, else date for "read" status
+  const finished = entries.filter(e => {
+    const d = e.dateFinished || (e.status === 'read' ? e.date : null);
+    return d && d.startsWith(year);
+  });
+
+  const books = finished.filter(e => e.type === 'book');
+  const fics = finished.filter(e => e.type === 'fic');
+
+  // Word count: fic = parse from e.length, book = parse from e.length (pages * 250 fallback)
+  function parseWords(e) {
+    const raw = (e.length || '').replace(/,/g, '');
+    const n = parseInt(raw);
+    if (!n) return 0;
+    if (/word/i.test(e.length)) return n;
+    if (e.type === 'book' && /page/i.test(e.length)) return n * 250;
+    if (e.type === 'book') return n * 250; // assume pages
+    return n; // fic default = word count
+  }
+  const totalWords = finished.reduce((sum, e) => sum + parseWords(e), 0);
+
+  // Stats
+  const statsEl = document.getElementById('yir-stats');
+  statsEl.innerHTML = [
+    { num: finished.length, lbl: 'Works finished' },
+    { num: books.length, lbl: 'Books' },
+    { num: fics.length, lbl: 'Fanfics' },
+    { num: totalWords >= 1000000 ? (totalWords/1000000).toFixed(1)+'M' : totalWords >= 1000 ? Math.round(totalWords/1000)+'k' : totalWords, lbl: 'Words read' },
+  ].map(s => `<div class="yir-stat"><div class="yir-stat-num">${s.num}</div><div class="yir-stat-lbl">${s.lbl}</div></div>`).join('');
+
+  // Finished list
+  const listEl = document.getElementById('yir-finished-list');
+  if (!finished.length) {
+    listEl.innerHTML = `<div class="yir-empty">No finished entries for ${year} yet.</div>`;
+  } else {
+    listEl.innerHTML = finished.map(e => {
+      const words = parseWords(e);
+      const meta = [
+        e.type === 'fic' ? '✶ Fanfic' : '✦ Book',
+        words ? (words >= 1000 ? Math.round(words/1000)+'k words' : words+' words') : '',
+        e.ao3Data?.ao3Rating || '',
+        e.rating ? '★'.repeat(e.rating) : '',
+      ].filter(Boolean).join(' · ');
+      const titleHtml = e.url
+        ? `<a href="${escHtml(e.url)}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none" onclick="event.stopPropagation()">${escHtml(e.title)}</a>`
+        : escHtml(e.title);
+      return `<div class="yir-entry">
+        <div class="yir-entry-title">${titleHtml}</div>
+        <div class="yir-entry-meta">${escHtml(meta)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Monthly bar chart
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const counts = new Array(12).fill(0);
+  finished.forEach(e => {
+    const d = e.dateFinished || e.date;
+    if (d) { const m = parseInt(d.slice(5,7)) - 1; counts[m]++; }
+  });
+  const max = Math.max(...counts, 1);
+  document.getElementById('yir-months').innerHTML = months.map((m,i) => `
+    <div class="yir-month-row">
+      <div class="yir-month-label">${m}</div>
+      <div class="yir-month-bar-wrap"><div class="yir-month-bar" style="width:${Math.round(counts[i]/max*100)}%"></div></div>
+      <div class="yir-month-count">${counts[i] || ''}</div>
+    </div>`).join('');
+}
+
 function openBmImport() {
   document.getElementById('bm-import-backdrop').classList.add('open');
   document.getElementById('bm-json-input').value = '';
